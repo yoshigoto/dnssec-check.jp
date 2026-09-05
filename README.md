@@ -33,3 +33,7 @@ DNSSECの信頼の連鎖（Chain of Trust）の検証結果を確認するため
 ## ファイル構成
 
 - [index.html](index.html) - 確認用リンク一覧を掲載したページ本体
+
+## 検証用のドメイン名について
+
+検証用のドメイン名を作成する際は [dnssec-corrupt-zone](https://github.com/yoshigoto/dnssec-corrupt-zone) を用いています。
