@@ -17,6 +17,35 @@ DNSSECの信頼の連鎖（Chain of Trust）の検証結果を確認するため
 
 このリポジトリでは、テストページの index.html をバージョン管理しています。
 
+## 開発環境
+
+WSL2 の Ubuntu で開発・確認します。以下のコマンドが利用できる環境を前提としています。
+
+- Git
+- Python 3
+- curl
+
+リポジトリを WSL2 の Ubuntu 側に配置して、Ubuntu のターミナルから操作してください。
+
+### ローカルで確認する
+
+リポジトリのルートディレクトリで静的 HTTP サーバーを起動します。
+
+```bash
+python3 -m http.server 8000
+```
+
+ブラウザーで http://127.0.0.1:8000/index.html を開いてページを確認します。VS Code のコマンドパレットから `Tasks: Run Task` を実行し、`Serve static HTML` を選択して起動することもできます。
+
+別の Ubuntu ターミナルでは、次のコマンドで HTTP 応答とページ内容を確認できます。
+
+```bash
+curl -I http://127.0.0.1:8000/index.html
+curl -fsS http://127.0.0.1:8000/index.html | grep -q '<title>'
+```
+
+確認が終わったら、HTTP サーバーを起動したターミナルで `Ctrl+C` を押して終了します。
+
 ## 確認できるパターン
 
 各アルゴリズムについて、以下のパターンを確認できます。
