@@ -48,7 +48,7 @@ curl -fsS http://127.0.0.1:8000/index.html | grep -q '<title>'
 
 ## 確認できるパターン
 
-各アルゴリズムについて、以下のパターンを確認できます。
+各アルゴリズムの委任状態について、以下のパターンを確認できます。
 
 | パターン | 内容 |
 | --- | --- |
@@ -58,6 +58,7 @@ curl -fsS http://127.0.0.1:8000/index.html | grep -q '<title>'
 | 失敗パターン：DSリソースレコードの検証失敗 | DSリソースレコードの検証に失敗する |
 | 失敗パターン：DNSKEYリソースレコードの検証失敗 | DNSKEYリソースレコードの署名検証に失敗する |
 | 失敗パターン：DNSKEYリソースレコードの検証失敗（有効期限切れ） | DNSKEYリソースレコードに対する署名の有効期限切れにより検証に失敗する |
+| 失敗パターン：Aリソースレコードの検証失敗 | Aリソースレコードの署名検証に失敗する。委任状態の検証とは目的が異なるため、独立した表で確認する |
 | 失敗パターン：不在証明のカバー不成立 (NSEC) | NSECの Next Domain Name が対象名を正しくカバーせず、NXDOMAIN の証明に失敗する |
 | 失敗パターン：NODATA不在証明の不整合 (NSEC) | NSEC の型ビットマップと実際の応答が不一致で、NODATA の証明が破綻する |
 | 失敗パターン：不在証明のカバー不成立 (NSEC3) | NSEC3 の Next Hashed Owner Name が対象名を正しくカバーせず、NXDOMAIN の証明に失敗する |
@@ -65,10 +66,14 @@ curl -fsS http://127.0.0.1:8000/index.html | grep -q '<title>'
 
 ドメイン名は `<パターン>.<アルゴリズム>.dnssec-check.jp` の形式で構成されています（例：`success.rsasha256.dnssec-check.jp`）。
 NSEC や NSEC3 のケースでは、対象名や不整合の種類を名前に含めており、例として `missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp` や `target.type.mismatch.nsec3.rsasha256.dnssec-check.jp` のように命名しています。
+NSEC および NSEC3 の不在証明検証は、RSASHA256 のドメインで確認します。
+
+Aリソースレコードの署名検証では、`corrupted.sign.a.<アルゴリズム>.dnssec-check.jp` の形式で命名しています。これらは `www.` を付けた委任状態確認用ドメインとは別の目的で使用します。
 
 ## ファイル構成
 
 - [index.html](index.html) - 確認用リンク一覧を掲載したページ本体
+- [test_domains.py](test_domains.py) - ドメイン名とリンク表示の整合性を確認するテスト
 
 ## 検証用のドメイン名について
 

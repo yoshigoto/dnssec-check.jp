@@ -19,9 +19,9 @@ EXPECTED_PATTERNS = (
     "sign.ds.error",
     "sign.dnskey.error",
     "expire.dnskey.error",
-    "corrupted.sign.a.error",
 )
 BASE_DOMAIN = "dnssec-check.jp"
+NSEC_ALGORITHM = "rsasha256"
 
 
 class TableParser(HTMLParser):
@@ -107,7 +107,11 @@ class DomainNamingTest(unittest.TestCase):
 
     def test_algorithm_tables_have_consistent_domain_patterns(self):
         self.assertGreaterEqual(len(self.tables), 4)
-        for table, algorithm in zip(self.tables[:4], ALGORITHMS):
+        algorithm_tables = [
+            table for table in self.tables if table["heading"].lower() in ALGORITHMS
+        ]
+        self.assertEqual(len(algorithm_tables), len(ALGORITHMS))
+        for table, algorithm in zip(algorithm_tables, ALGORITHMS):
             self.assertEqual(table["heading"].lower(), algorithm)
             self.assertEqual(len(table["rows"]), len(EXPECTED_PATTERNS))
             for row, pattern in zip(table["rows"], EXPECTED_PATTERNS):
@@ -117,16 +121,24 @@ class DomainNamingTest(unittest.TestCase):
                 self.assert_link_domain_matches_display(a_record_cell)
 
                 expected_domain = f"{pattern}.{algorithm}.{BASE_DOMAIN}"
-                self.assertEqual(
-                    domains_in_cell(chain_cell), [expected_domain]
-                    if pattern != "corrupted.sign.a.error"
-                    else [],
-                )
+                self.assertEqual(domains_in_cell(chain_cell), [expected_domain])
                 expected_a_domain = f"www.{expected_domain}"
                 self.assertEqual(domains_in_cell(a_record_cell), [expected_a_domain])
 
+    def test_a_record_signature_table_uses_corrupted_domains(self):
+        table = next(table for table in self.tables if table["heading"] == "Aレコード署名検証")
+        self.assertEqual(len(table["rows"]), len(ALGORITHMS))
+        for row, algorithm in zip(table["rows"], ALGORITHMS):
+            self.assertEqual(len(row), 4)
+            self.assertEqual(row[1]["text"].lower(), algorithm)
+            self.assertEqual(row[2]["text"], "Aリソースレコードの検証失敗")
+            self.assert_link_domain_matches_display(row[3])
+            expected_domain = f"corrupted.sign.a.error.{algorithm}.{BASE_DOMAIN}"
+            self.assertEqual(domains_in_cell(row[3]), [expected_domain])
+
     def test_nsec_tables_use_consistent_names_and_links(self):
-        self.assertEqual([table["heading"] for table in self.tables[4:6]], ["NSEC", "NSEC3"])
+        nsec_tables = [table for table in self.tables if table["heading"] in ("NSEC", "NSEC3")]
+        self.assertEqual(len(nsec_tables), 2)
         expected_domains = (
             "missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp",
             "target.type.mismatch.nsec.rsasha256.dnssec-check.jp",
@@ -134,11 +146,15 @@ class DomainNamingTest(unittest.TestCase):
             "target.type.mismatch.nsec3.rsasha256.dnssec-check.jp",
         )
         actual_domains = []
-        for table in self.tables[4:6]:
+        for table in nsec_tables:
             for row in table["rows"]:
                 self.assertEqual(len(row), 3)
                 self.assert_link_domain_matches_display(row[2])
-                actual_domains.extend(domains_in_cell(row[2]))
+                domains = domains_in_cell(row[2])
+                self.assertTrue(domains)
+                for domain in domains:
+                    self.assertIn(f".{NSEC_ALGORITHM}.{BASE_DOMAIN}", domain)
+                actual_domains.extend(domains)
         self.assertEqual(actual_domains, list(expected_domains))
 
 

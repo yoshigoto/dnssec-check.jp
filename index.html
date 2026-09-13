@@ -67,7 +67,7 @@
     <p>
         DNSSECの信頼の連鎖を確認するためのテストページです。<br>
         「検証ツールへ」をクリックすると、「<a href="https://www.on-link.jp/dnssec-validator/" target="_blank" rel="noopener">DNSSEC委任状態検証ツール</a>」の画面に遷移します。<br>
-        各表の「信頼の連鎖の確認 (+不在証明の検証)」列はゾーンの頂点となるドメイン名、「Aレコードの検証」列は先頭に "www." を付けたドメイン名を対象としています。
+        各表の「信頼の連鎖の確認 (+不在証明の検証)」列はゾーンの頂点となるドメイン名、「Aレコードの検証」列は先頭に "www." を付けたドメイン名を対象としています。Aレコードの署名破損を確認するドメインは、別表にまとめています。
     </p>
 
     <nav class="toc">
@@ -77,6 +77,7 @@
             <li><a href="#ecdsap256sha256">ECDSAP256SHA256</a></li>
             <li><a href="#ed25519">ED25519</a></li>
             <li><a href="#ed448">ED448</a></li>
+            <li><a href="#a-record">Aレコード署名検証</a></li>
             <li><a href="#nsec">NSEC</a></li>
             <li><a href="#nsec3">NSEC3</a></li>
         </ul>
@@ -124,12 +125,6 @@
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">expire.dnskey.error.rsasha256.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.expire.dnskey.error.rsasha256.dnssec-check.jp</span></td>
             </tr>
-            <tr>
-                <td><span class="badge ng">失敗</span></td>
-                <td>Aリソースレコードの検証失敗</td>
-                <td>-</td>
-                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">corrupted.sign.a.error.rsasha256.dnssec-check.jp</span></td>
-            </tr>
         </tbody>
     </table>
 
@@ -174,12 +169,6 @@
                 <td>DNSKEYリソースレコードの検証失敗 (有効期限切れ)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">expire.dnskey.error.ecdsap256sha256.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.expire.dnskey.error.ecdsap256sha256.dnssec-check.jp</span></td>
-            </tr>
-            <tr>
-                <td><span class="badge ng">失敗</span></td>
-                <td>Aリソースレコードの検証失敗</td>
-                <td>-</td>
-                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">corrupted.sign.a.error.ecdsap256sha256.dnssec-check.jp</span></td>
             </tr>
         </tbody>
     </table>
@@ -226,12 +215,6 @@
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">expire.dnskey.error.ed25519.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.expire.dnskey.error.ed25519.dnssec-check.jp</span></td>
             </tr>
-            <tr>
-                <td><span class="badge ng">失敗</span></td>
-                <td>Aリソースレコードの検証失敗</td>
-                <td>-</td>
-                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">corrupted.sign.a.error.ed25519.dnssec-check.jp</span></td>
-            </tr>
         </tbody>
     </table>
 
@@ -277,16 +260,44 @@
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">expire.dnskey.error.ed448.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.expire.dnskey.error.ed448.dnssec-check.jp</span></td>
             </tr>
+        </tbody>
+    </table>
+
+    <h3 id="a-record">Aレコード署名検証</h3>
+    <p>Aレコードの署名破損を確認するため、各アルゴリズムの専用ドメインを検証します。</p>
+    <table>
+        <thead>
+            <tr><th>結果</th><th>アルゴリズム</th><th>パターン</th><th>検証用ドメイン名</th></tr>
+        </thead>
+        <tbody>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
+                <td>RSASHA256</td>
                 <td>Aリソースレコードの検証失敗</td>
-                <td>-</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">corrupted.sign.a.error.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>ECDSAP256SHA256</td>
+                <td>Aリソースレコードの検証失敗</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">corrupted.sign.a.error.ecdsap256sha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>ED25519</td>
+                <td>Aリソースレコードの検証失敗</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">corrupted.sign.a.error.ed25519.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>ED448</td>
+                <td>Aリソースレコードの検証失敗</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">corrupted.sign.a.error.ed448.dnssec-check.jp</span></td>
             </tr>
         </tbody>
     </table>
 
-    <p>以下では NSEC と NSEC3 について確認することができます。</p>
+    <p>以下では NSEC と NSEC3 について確認することができます。これらは RSASHA256 のドメインで確認します。</p>
 
     <h3 id="nsec">NSEC</h3>
     <table>
