@@ -3,83 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <title>DNSSEC信頼の連鎖確認ページ</title>
+    <style>
+        :root {
+            --ok-color: #1b7f3a;
+            --ok-bg: #e6f4ea;
+            --ng-color: #b3261e;
+            --ng-bg: #fce8e6;
+            --border-color: #d0d7de;
+            --header-bg: #f6f8fa;
+        }
+        body {
+            font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+            line-height: 1.6;
+            color: #1f2328;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 1.5em;
+        }
+        h2 { border-bottom: 2px solid var(--border-color); padding-bottom: 0.3em; }
+        h3 {
+            margin-top: 2em;
+            padding: 0.3em 0.6em;
+            background: var(--header-bg);
+            border-left: 4px solid #57606a;
+        }
+        nav.toc {
+            background: var(--header-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.8em 1.2em;
+            margin: 1.2em 0;
+        }
+        nav.toc ul { columns: 2; margin: 0.3em 0 0; padding-left: 1.2em; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.2em;
+            font-size: 0.95em;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.5em 0.7em;
+            text-align: left;
+            vertical-align: top;
+        }
+        th { background: var(--header-bg); }
+        td.domain { font-family: monospace; font-size: 0.85em; color: #57606a; }
+        .badge {
+            display: inline-block;
+            padding: 0.15em 0.6em;
+            border-radius: 1em;
+            font-size: 0.85em;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .badge.ok { color: var(--ok-color); background: var(--ok-bg); }
+        .badge.ng { color: var(--ng-color); background: var(--ng-bg); }
+        footer { margin-top: 2em; padding-top: 0.8em; border-top: 1px solid var(--border-color); color: #57606a; font-size: 0.9em; }
+    </style>
 </head>
 <body>
     <h2>DNSSEC信頼の連鎖確認ページ</h2>
-    DNSSECの信頼の連鎖を確認するためのテストページです。<br>
-    URLをクリックすると、「<a href="https://www.on-link.jp/dnssec-validator/" target="_blank" rel="noopener">DNSSEC委任状態検証ツール</a>」の画面に遷移します。<br>
-    以下に、暗号アルゴリズムごとにゾーンの頂点となるドメイン名と、Aレコードでの確認用のドメイン名 (先頭に "www." と付けたドメイン名) を列挙しました。
-    <h3>RSASHA256</h3>
-    <ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=success.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">成功パターン (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：success.rsasha256.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">成功パターン (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.success.rsasha256.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：Key Tagミスマッチ (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：keytag.ds.error.rsasha256.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：Key Tagミスマッチ (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.keytag.ds.error.rsasha256.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：ハッシュ値ミスマッチ (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：hash.ds.error.rsasha256.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：ハッシュ値ミスマッチ (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.hash.ds.error.rsasha256.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DSリソースレコードの検証失敗 (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：sign.ds.error.rsasha256.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DSリソースレコードの検証失敗 (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.sign.ds.error.rsasha256.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DNSKEYリソースレコードの検証失敗 (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：sign.dnskey.error.rsasha256.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DNSKEYリソースレコードの検証失敗 (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.sign.dnskey.error.rsasha256.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DNSKEYリソースレコードの検証失敗 (有効期限切れ) (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：expire.dnskey.error.rsasha256.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DNSKEYリソースレコードの検証失敗 (有効期限切れ) (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.expire.dnskey.error.rsasha256.dnssec-check.jp)</li></ul>
-    </ul>
-    <h3>ECDSAP256SHA256</h3>
-    <ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=success.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">成功パターン (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：success.ecdsap256sha256.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">成功パターン (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.success.ecdsap256sha256.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：Key Tagミスマッチ (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：keytag.ds.error.ecdsap256sha256.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：Key Tagミスマッチ (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.keytag.ds.error.ecdsap256sha256.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：ハッシュ値ミスマッチ (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：hash.ds.error.ecdsap256sha256.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：ハッシュ値ミスマッチ (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.hash.ds.error.ecdsap256sha256.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DSリソースレコードの検証失敗 (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：sign.ds.error.ecdsap256sha256.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DSリソースレコードの検証失敗 (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.sign.ds.error.ecdsap256sha256.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DNSKEYリソースレコードの検証失敗 (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：sign.dnskey.error.ecdsap256sha256.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DNSKEYリソースレコードの検証失敗 (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.sign.dnskey.error.ecdsap256sha256.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DNSKEYリソースレコードの検証失敗 (有効期限切れ) (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：expire.dnskey.error.ecdsap256sha256.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DNSKEYリソースレコードの検証失敗 (有効期限切れ) (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.expire.dnskey.error.ecdsap256sha256.dnssec-check.jp)</li></ul>
-    </ul>
-    <h3>ED25519</h3>
-    <ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=success.ed25519.dnssec-check.jp" target="_blank" rel="noopener">成功パターン (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：success.ed25519.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.ed25519.dnssec-check.jp" target="_blank" rel="noopener">成功パターン (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.success.ed25519.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：Key Tagミスマッチ (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：keytag.ds.error.ed25519.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：Key Tagミスマッチ (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.keytag.ds.error.ed25519.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：ハッシュ値ミスマッチ (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：hash.ds.error.ed25519.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：ハッシュ値ミスマッチ (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.hash.ds.error.ed25519.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DSリソースレコードの検証失敗 (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：sign.ds.error.ed25519.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DSリソースレコードの検証失敗 (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.sign.ds.error.ed25519.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DNSKEYリソースレコードの検証失敗 (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：sign.dnskey.error.ed25519.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DNSKEYリソースレコードの検証失敗 (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.sign.dnskey.error.ed25519.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DNSKEYリソースレコードの検証失敗 (有効期限切れ) (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：expire.dnskey.error.ed25519.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DNSKEYリソースレコードの検証失敗 (有効期限切れ) (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.expire.dnskey.error.ed25519.dnssec-check.jp)</li></ul>
-    </ul>
-    <h3>ED448</h3>
-    <ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=success.ed448.dnssec-check.jp" target="_blank" rel="noopener">成功パターン (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：success.ed448.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.ed448.dnssec-check.jp" target="_blank" rel="noopener">成功パターン (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.success.ed448.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：Key Tagミスマッチ (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：keytag.ds.error.ed448.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：Key Tagミスマッチ (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.keytag.ds.error.ed448.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：ハッシュ値ミスマッチ (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：hash.ds.error.ed448.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：ハッシュ値ミスマッチ (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.hash.ds.error.ed448.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DSリソースレコードの検証失敗 (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：sign.ds.error.ed448.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DSリソースレコードの検証失敗 (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.sign.ds.error.ed448.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DNSKEYリソースレコードの検証失敗 (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：sign.dnskey.error.ed448.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DNSKEYリソースレコードの検証失敗 (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.sign.dnskey.error.ed448.dnssec-check.jp)</li></ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DNSKEYリソースレコードの検証失敗 (有効期限切れ) (Aリソースレコードに関する不在証明の検証)</a> (ドメイン名：expire.dnskey.error.ed448.dnssec-check.jp)</li>
-        <ul><li><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：DNSKEYリソースレコードの検証失敗 (有効期限切れ) (Aリソースレコードを持つドメイン名の検証)</a> (ドメイン名：www.expire.dnskey.error.ed448.dnssec-check.jp)</li></ul>
-    </ul>
-    以下では NSECと NSEC3 について確認することができます。
-    <h3>NSEC</h3>
-    <ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：不在証明のカバー不成立 (NSEC の Next Domain Name を所有者名にする)</a> (ドメイン名：missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp)</li>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mismatch.nsec.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：NODATA不在証明の不整合 (AAAAを持つドメイン名の NSECビットマップに Aを追加)</a> (ドメイン名：target.type.mismatch.nsec.rsasha256.dnssec-check.jp)</li>
-    </ul>
-    <h3>NSEC3</h3>
-    <ul>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec3.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：不在証明のカバー不成立 (NSEC3 の Next Hashed Owner Name を所有者ハッシュにする)</a> (ドメイン名：missing.cover.mismatch.nsec3.rsasha256.dnssec-check.jp)</li>
-        <li><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mismatch.nsec3.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">失敗パターン：NODATA不在証明の不整合 (AAAAを持つドメイン名の NSEC3ビットマップに Aを追加)</a> (ドメイン名：target.type.mismatch.nsec3.rsasha256.dnssec-check.jp)</li>
-    </ul>
+    <p>
+        DNSSECの信頼の連鎖を確認するためのテストページです。<br>
+        URLをクリックすると、「<a href="https://www.on-link.jp/dnssec-validator/" target="_blank" rel="noopener">DNSSEC委任状態検証ツール</a>」の画面に遷移します。<br>
+        各表の「不在証明の検証」列はゾーンの頂点となるドメイン名、「Aレコードの検証」列は先頭に "www." を付けたドメイン名を対象としています。
+    </p>
+
+    <nav class="toc">
+        目次
+        <ul>
+            <li><a href="#rsasha256">RSASHA256</a></li>
+            <li><a href="#ecdsap256sha256">ECDSAP256SHA256</a></li>
+            <li><a href="#ed25519">ED25519</a></li>
+            <li><a href="#ed448">ED448</a></li>
+            <li><a href="#nsec">NSEC</a></li>
+            <li><a href="#nsec3">NSEC3</a></li>
+        </ul>
+    </nav>
+
+    <h3 id="rsasha256">RSASHA256</h3>
+    <table>
+        <thead>
+            <tr><th>結果</th><th>パターン</th><th>不在証明の検証</th><th>Aレコードの検証</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge ok">成功</span></td>
+                <td>正常な委任</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=success.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">success.rsasha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.success.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>Key Tagミスマッチ</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">keytag.ds.error.rsasha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.keytag.ds.error.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>ハッシュ値ミスマッチ</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">hash.ds.error.rsasha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.hash.ds.error.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>DSリソースレコードの検証失敗</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">sign.ds.error.rsasha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.sign.ds.error.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>DNSKEYリソースレコードの検証失敗</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">sign.dnskey.error.rsasha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.sign.dnskey.error.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>DNSKEYリソースレコードの検証失敗 (有効期限切れ)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">expire.dnskey.error.rsasha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.expire.dnskey.error.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 id="ecdsap256sha256">ECDSAP256SHA256</h3>
+    <table>
+        <thead>
+            <tr><th>結果</th><th>パターン</th><th>不在証明の検証</th><th>Aレコードの検証</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge ok">成功</span></td>
+                <td>正常な委任</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=success.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">success.ecdsap256sha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.success.ecdsap256sha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>Key Tagミスマッチ</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">keytag.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.keytag.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>ハッシュ値ミスマッチ</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">hash.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.hash.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>DSリソースレコードの検証失敗</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">sign.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.sign.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>DNSKEYリソースレコードの検証失敗</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">sign.dnskey.error.ecdsap256sha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.sign.dnskey.error.ecdsap256sha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>DNSKEYリソースレコードの検証失敗 (有効期限切れ)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">expire.dnskey.error.ecdsap256sha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.expire.dnskey.error.ecdsap256sha256.dnssec-check.jp</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 id="ed25519">ED25519</h3>
+    <table>
+        <thead>
+            <tr><th>結果</th><th>パターン</th><th>不在証明の検証</th><th>Aレコードの検証</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge ok">成功</span></td>
+                <td>正常な委任</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=success.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">success.ed25519.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.success.ed25519.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>Key Tagミスマッチ</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">keytag.ds.error.ed25519.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.keytag.ds.error.ed25519.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>ハッシュ値ミスマッチ</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">hash.ds.error.ed25519.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.hash.ds.error.ed25519.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>DSリソースレコードの検証失敗</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">sign.ds.error.ed25519.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.sign.ds.error.ed25519.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>DNSKEYリソースレコードの検証失敗</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">sign.dnskey.error.ed25519.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.sign.dnskey.error.ed25519.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>DNSKEYリソースレコードの検証失敗 (有効期限切れ)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">expire.dnskey.error.ed25519.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.expire.dnskey.error.ed25519.dnssec-check.jp</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 id="ed448">ED448</h3>
+    <table>
+        <thead>
+            <tr><th>結果</th><th>パターン</th><th>不在証明の検証</th><th>Aレコードの検証</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge ok">成功</span></td>
+                <td>正常な委任</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=success.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">success.ed448.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.success.ed448.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>Key Tagミスマッチ</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">keytag.ds.error.ed448.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.keytag.ds.error.ed448.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>ハッシュ値ミスマッチ</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">hash.ds.error.ed448.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.hash.ds.error.ed448.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>DSリソースレコードの検証失敗</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">sign.ds.error.ed448.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.sign.ds.error.ed448.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>DNSKEYリソースレコードの検証失敗</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">sign.dnskey.error.ed448.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.sign.dnskey.error.ed448.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>DNSKEYリソースレコードの検証失敗 (有効期限切れ)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">expire.dnskey.error.ed448.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">www.expire.dnskey.error.ed448.dnssec-check.jp</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>以下では NSEC と NSEC3 について確認することができます。</p>
+
+    <h3 id="nsec">NSEC</h3>
+    <table>
+        <thead>
+            <tr><th>結果</th><th>パターン</th><th>検証</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>不在証明のカバー不成立 (NSEC の Next Domain Name を所有者名にする)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>NODATA不在証明の不整合 (AAAAを持つドメイン名の NSECビットマップに Aを追加)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mismatch.nsec.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">target.type.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 id="nsec3">NSEC3</h3>
+    <table>
+        <thead>
+            <tr><th>結果</th><th>パターン</th><th>検証</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>不在証明のカバー不成立 (NSEC3 の Next Hashed Owner Name を所有者ハッシュにする)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec3.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">missing.cover.mismatch.nsec3.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>NODATA不在証明の不整合 (AAAAを持つドメイン名の NSEC3ビットマップに Aを追加)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mismatch.nsec3.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証</a><br><span class="domain">target.type.mismatch.nsec3.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+        </tbody>
+    </table>
+
     <footer>
         <p>&copy; 2026 <a href="https://x.com/goto_ipv6">Y.Goto</a>. 本サイトおよび掲載ドメインは、DNSSECの検証を目的として提供されています。</p>
     </footer>
