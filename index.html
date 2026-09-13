@@ -67,7 +67,11 @@
     <p>
         DNSSECの信頼の連鎖を確認するためのテストページです。<br>
         「検証ツールへ」をクリックすると、「<a href="https://www.on-link.jp/dnssec-validator/" target="_blank" rel="noopener">DNSSEC委任状態検証ツール</a>」の画面に遷移します。<br>
-        各表の「信頼の連鎖の確認 (+不在証明の検証)」列はゾーンの頂点となるドメイン名、「Aレコードの検証」列は先頭に "www." を付けたドメイン名を対象としています。Aレコードの署名破損を確認するドメインは、別表にまとめています。
+        各表の「信頼の連鎖の確認 (+不在証明の検証)」列はゾーンの頂点となるドメイン名（ゾーン頂点にAレコードが存在しない場合はNODATA不在証明も検証）、「www名に対する総合検証」列は先頭に "www." を付けたドメイン名を対象としています。Aレコードの署名破損を確認するドメインは、別表にまとめています。
+    </p>
+    <p>
+        ※ 表中の「期待される総合判定」は、検証ツール等で検証した場合の最終的な判定結果を示しています。<br>
+        ※ 各アルゴリズム見出し（RSASHA256、ED25519等）は子ゾーンのDNSKEYやAレコード等の署名アルゴリズムを指しています。親ゾーン（.jp）のDS RRset署名（RRSIG）アルゴリズムを指すものではありません。
     </p>
 
     <nav class="toc">
@@ -86,42 +90,42 @@
     <h3 id="rsasha256">RSASHA256</h3>
     <table>
         <thead>
-            <tr><th>結果</th><th>パターン</th><th>信頼の連鎖の確認 (+不在証明の検証)</th><th>Aレコードの検証</th></tr>
+            <tr><th>期待される総合判定</th><th>パターン</th><th>信頼の連鎖の確認 (+不在証明の検証)</th><th>www名に対する総合検証</th></tr>
         </thead>
         <tbody>
             <tr>
                 <td><span class="badge ok">成功</span></td>
-                <td>正常な委任</td>
+                <td>DNSSEC総合検証成功</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=success.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">success.rsasha256.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.success.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>Key Tagミスマッチ</td>
+                <td>親DSのKey Tagと子DNSKEYのKey Tagが不一致</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">keytag.ds.error.rsasha256.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.keytag.ds.error.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>ハッシュ値ミスマッチ</td>
+                <td>親DSのDigestと子DNSKEYから計算したDigestが不一致</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">hash.ds.error.rsasha256.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.hash.ds.error.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>DSリソースレコードの検証失敗</td>
+                <td>親ゾーンのDS RRset署名（RRSIG）破損</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">sign.ds.error.rsasha256.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.sign.ds.error.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>DNSKEYリソースレコードの検証失敗</td>
+                <td>DNSKEY RRset署名（RRSIG）破損</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">sign.dnskey.error.rsasha256.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.sign.dnskey.error.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>DNSKEYリソースレコードの検証失敗 (有効期限切れ)</td>
+                <td>DNSKEY RRsetのRRSIG期限切れ</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">expire.dnskey.error.rsasha256.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.expire.dnskey.error.rsasha256.dnssec-check.jp</span></td>
             </tr>
@@ -131,42 +135,42 @@
     <h3 id="ecdsap256sha256">ECDSAP256SHA256</h3>
     <table>
         <thead>
-            <tr><th>結果</th><th>パターン</th><th>信頼の連鎖の確認 (+不在証明の検証)</th><th>Aレコードの検証</th></tr>
+            <tr><th>期待される総合判定</th><th>パターン</th><th>信頼の連鎖の確認 (+不在証明の検証)</th><th>www名に対する総合検証</th></tr>
         </thead>
         <tbody>
             <tr>
                 <td><span class="badge ok">成功</span></td>
-                <td>正常な委任</td>
+                <td>DNSSEC総合検証成功</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=success.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">success.ecdsap256sha256.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.success.ecdsap256sha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>Key Tagミスマッチ</td>
+                <td>親DSのKey Tagと子DNSKEYのKey Tagが不一致</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">keytag.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.keytag.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>ハッシュ値ミスマッチ</td>
+                <td>親DSのDigestと子DNSKEYから計算したDigestが不一致</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">hash.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.hash.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>DSリソースレコードの検証失敗</td>
+                <td>親ゾーンのDS RRset署名（RRSIG）破損</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">sign.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.sign.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>DNSKEYリソースレコードの検証失敗</td>
+                <td>DNSKEY RRset署名（RRSIG）破損</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">sign.dnskey.error.ecdsap256sha256.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.sign.dnskey.error.ecdsap256sha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>DNSKEYリソースレコードの検証失敗 (有効期限切れ)</td>
+                <td>DNSKEY RRsetのRRSIG期限切れ</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">expire.dnskey.error.ecdsap256sha256.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.expire.dnskey.error.ecdsap256sha256.dnssec-check.jp</span></td>
             </tr>
@@ -176,42 +180,42 @@
     <h3 id="ed25519">ED25519</h3>
     <table>
         <thead>
-            <tr><th>結果</th><th>パターン</th><th>信頼の連鎖の確認 (+不在証明の検証)</th><th>Aレコードの検証</th></tr>
+            <tr><th>期待される総合判定</th><th>パターン</th><th>信頼の連鎖の確認 (+不在証明の検証)</th><th>www名に対する総合検証</th></tr>
         </thead>
         <tbody>
             <tr>
                 <td><span class="badge ok">成功</span></td>
-                <td>正常な委任</td>
+                <td>DNSSEC総合検証成功</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=success.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">success.ed25519.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.success.ed25519.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>Key Tagミスマッチ</td>
+                <td>親DSのKey Tagと子DNSKEYのKey Tagが不一致</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">keytag.ds.error.ed25519.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.keytag.ds.error.ed25519.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>ハッシュ値ミスマッチ</td>
+                <td>親DSのDigestと子DNSKEYから計算したDigestが不一致</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">hash.ds.error.ed25519.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.hash.ds.error.ed25519.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>DSリソースレコードの検証失敗</td>
+                <td>親ゾーンのDS RRset署名（RRSIG）破損</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">sign.ds.error.ed25519.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.sign.ds.error.ed25519.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>DNSKEYリソースレコードの検証失敗</td>
+                <td>DNSKEY RRset署名（RRSIG）破損</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">sign.dnskey.error.ed25519.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.sign.dnskey.error.ed25519.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>DNSKEYリソースレコードの検証失敗 (有効期限切れ)</td>
+                <td>DNSKEY RRsetのRRSIG期限切れ</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">expire.dnskey.error.ed25519.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.expire.dnskey.error.ed25519.dnssec-check.jp</span></td>
             </tr>
@@ -221,42 +225,42 @@
     <h3 id="ed448">ED448</h3>
     <table>
         <thead>
-            <tr><th>結果</th><th>パターン</th><th>信頼の連鎖の確認 (+不在証明の検証)</th><th>Aレコードの検証</th></tr>
+            <tr><th>期待される総合判定</th><th>パターン</th><th>信頼の連鎖の確認 (+不在証明の検証)</th><th>www名に対する総合検証</th></tr>
         </thead>
         <tbody>
             <tr>
                 <td><span class="badge ok">成功</span></td>
-                <td>正常な委任</td>
+                <td>DNSSEC総合検証成功</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=success.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">success.ed448.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.success.ed448.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>Key Tagミスマッチ</td>
+                <td>親DSのKey Tagと子DNSKEYのKey Tagが不一致</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">keytag.ds.error.ed448.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.keytag.ds.error.ed448.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>ハッシュ値ミスマッチ</td>
+                <td>親DSのDigestと子DNSKEYから計算したDigestが不一致</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">hash.ds.error.ed448.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.hash.ds.error.ed448.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>DSリソースレコードの検証失敗</td>
+                <td>親ゾーンのDS RRset署名（RRSIG）破損</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">sign.ds.error.ed448.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.sign.ds.error.ed448.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>DNSKEYリソースレコードの検証失敗</td>
+                <td>DNSKEY RRset署名（RRSIG）破損</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">sign.dnskey.error.ed448.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.sign.dnskey.error.ed448.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>DNSKEYリソースレコードの検証失敗 (有効期限切れ)</td>
+                <td>DNSKEY RRsetのRRSIG期限切れ</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">expire.dnskey.error.ed448.dnssec-check.jp</span></td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.expire.dnskey.error.ed448.dnssec-check.jp</span></td>
             </tr>
@@ -267,31 +271,31 @@
     <p>Aレコードの署名破損を確認するため、各アルゴリズムの専用ドメインを検証します。</p>
     <table>
         <thead>
-            <tr><th>結果</th><th>アルゴリズム</th><th>パターン</th><th>検証用ドメイン名</th></tr>
+            <tr><th>期待される総合判定</th><th>アルゴリズム</th><th>パターン</th><th>検証用ドメイン名</th></tr>
         </thead>
         <tbody>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
                 <td>RSASHA256</td>
-                <td>Aリソースレコードの検証失敗</td>
+                <td>A RRset署名（RRSIG）破損</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">corrupted.sign.a.error.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
                 <td>ECDSAP256SHA256</td>
-                <td>Aリソースレコードの検証失敗</td>
+                <td>A RRset署名（RRSIG）破損</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">corrupted.sign.a.error.ecdsap256sha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
                 <td>ED25519</td>
-                <td>Aリソースレコードの検証失敗</td>
+                <td>A RRset署名（RRSIG）破損</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">corrupted.sign.a.error.ed25519.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
                 <td>ED448</td>
-                <td>Aリソースレコードの検証失敗</td>
+                <td>A RRset署名（RRSIG）破損</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">corrupted.sign.a.error.ed448.dnssec-check.jp</span></td>
             </tr>
         </tbody>
@@ -302,12 +306,12 @@
     <h3 id="nsec">NSEC</h3>
     <table>
         <thead>
-            <tr><th>結果</th><th>パターン</th><th>検証用ドメイン名</th></tr>
+            <tr><th>期待される総合判定</th><th>パターン</th><th>検証用ドメイン名</th></tr>
         </thead>
         <tbody>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>不在証明のカバー不成立 (NSEC の Next Domain Name を所有者名にする)</td>
+                <td>不在証明のカバー不成立 (NXDOMAINに必要なカバーが成立しない：NSECのNext Domain Nameを所有者名に設定)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
@@ -321,12 +325,12 @@
     <h3 id="nsec3">NSEC3</h3>
     <table>
         <thead>
-            <tr><th>結果</th><th>パターン</th><th>検証用ドメイン名</th></tr>
+            <tr><th>期待される総合判定</th><th>パターン</th><th>検証用ドメイン名</th></tr>
         </thead>
         <tbody>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>不在証明のカバー不成立 (NSEC3 の Next Hashed Owner Name を所有者ハッシュにする)</td>
+                <td>不在証明のカバー不成立 (NXDOMAINに必要なnext closer/ワイルドカードのカバーが成立しない：NSEC3のNext Hashed Owner Nameを所有者ハッシュに設定)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec3.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">missing.cover.mismatch.nsec3.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>

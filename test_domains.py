@@ -131,7 +131,7 @@ class DomainNamingTest(unittest.TestCase):
         for row, algorithm in zip(table["rows"], ALGORITHMS):
             self.assertEqual(len(row), 4)
             self.assertEqual(row[1]["text"].lower(), algorithm)
-            self.assertEqual(row[2]["text"], "Aリソースレコードの検証失敗")
+            self.assertEqual(row[2]["text"], "A RRset署名（RRSIG）破損")
             self.assert_link_domain_matches_display(row[3])
             expected_domain = f"corrupted.sign.a.error.{algorithm}.{BASE_DOMAIN}"
             self.assertEqual(domains_in_cell(row[3]), [expected_domain])
