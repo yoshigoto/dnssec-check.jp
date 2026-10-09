@@ -144,8 +144,6 @@ class DomainNamingTest(unittest.TestCase):
             "target.type.mismatch.nsec.rsasha256.dnssec-check.jp",
             "target.type.mx.mismatch.nsec.rsasha256.dnssec-check.jp",
             "target.type.txt.mismatch.nsec.rsasha256.dnssec-check.jp",
-            "missing.cover.mismatch.nsec3.rsasha256.dnssec-check.jp",
-            "target.type.mismatch.nsec3.rsasha256.dnssec-check.jp",
             "target.type.mx.mismatch.nsec3.rsasha256.dnssec-check.jp",
             "target.type.txt.mismatch.nsec3.rsasha256.dnssec-check.jp",
             "missing.cover.mismatch.nsec3.iter0.nosalt.rsasha256.dnssec-check.jp",
