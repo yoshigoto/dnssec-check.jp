@@ -63,15 +63,15 @@ curl -fsS http://127.0.0.1:8000/index.html | grep -q '<title>'
 | 失敗パターン：NODATA不在証明の不整合 (NSEC) | NSEC の型ビットマップと実際の応答が不一致で、NODATA の証明が破綻する。A・MX・TXT問い合わせ型を確認する |
 | 失敗パターン：不在証明のカバー不成立 (NSEC3) | NSEC3 の Next Hashed Owner Name が対象名を正しくカバーせず、NXDOMAIN の証明に失敗する |
 | 失敗パターン：NODATA不在証明の不整合 (NSEC3) | NSEC3 の型ビットマップと実際の応答が不一致で、NODATA の証明が破綻する。A・MX・TXT問い合わせ型と異なる反復回数・saltを確認する |
-| 失敗パターン：Opt-Out 不在証明のカバー不成立 (NSEC3) | 指定名 `unsigned` を覆う Opt-Out フラグ付き NSEC3 のカバー範囲が壊れており、不在証明の検証に失敗する |
+| 失敗パターン：Opt-Out 不在証明のカバー不成立 (NSEC3) | DNSSECで保護されない指定名 `unsigned` を覆う Opt-Out フラグ付き NSEC3 のカバー範囲が壊れており、不在証明の検証に失敗する |
 
 ドメイン名は `<パターン>.<アルゴリズム>.dnssec-check.jp` の形式で構成されています（例：`success.rsasha256.dnssec-check.jp`）。
 NSEC や NSEC3 のケースでは、対象名や不整合の種類を名前に含めており、例として `missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp` や `target.type.mismatch.nsec3.rsasha256.dnssec-check.jp` のように命名しています。
-Opt-Out NSEC3 のカバー不成立ケースは `unsigned.optout.mismatch.nsec3.rsasha256.dnssec-check.jp` です。
-NSEC と NSEC3 の型ビットマップ不整合は MX・TXT 問い合わせ型にも対応し、たとえば `type.mx.mismatch.nsec.rsasha256.dnssec-check.jp` や `type.txt.mismatch.nsec3.rsasha256.dnssec-check.jp` を確認できます。NSEC3 のカバー不成立、型ビットマップ不整合、Opt-Out カバー不成立には、反復回数 0・salt `A1B2`、反復回数 1・salt なし、反復回数 1・salt `A1B2` の各ドメインもあります。
+Opt-Out NSEC3 のカバー不成立ケースは、反復回数とsalt設定を含む `unsigned.optout.mismatch.nsec3.iter<回数>.<salt設定>.rsasha256.dnssec-check.jp` の形式です（例：`unsigned.optout.mismatch.nsec3.iter0.nosalt.rsasha256.dnssec-check.jp`）。
+NSEC と NSEC3 の型ビットマップ不整合は MX・TXT 問い合わせ型にも対応し、たとえば `target.type.mx.mismatch.nsec.rsasha256.dnssec-check.jp` や `target.type.txt.mismatch.nsec3.rsasha256.dnssec-check.jp` を確認できます。NSEC3 のカバー不成立、型ビットマップ不整合、Opt-Out カバー不成立には、反復回数 0・salt なし、反復回数 0・salt `A1B2`、反復回数 1・salt なし、反復回数 1・salt `A1B2` の各ドメインがあります。
 NSEC および NSEC3 の不在証明検証は、RSASHA256 のドメインで確認します。
 
-Aリソースレコードの署名検証では、`corrupted.sign.a.<アルゴリズム>.dnssec-check.jp` の形式で命名しています。これらは `www.` を付けた委任状態確認用ドメインとは別の目的で使用します。
+Aリソースレコードの署名検証では、`corrupted.sign.a.error.<アルゴリズム>.dnssec-check.jp` の形式で命名しています。これらは `www.` を付けた委任状態確認用ドメインとは別の目的で使用します。
 
 ## ファイル構成
 
@@ -80,6 +80,6 @@ Aリソースレコードの署名検証では、`corrupted.sign.a.<アルゴリ
 
 ## 検証用のドメイン名について
 
-検証用のドメイン名を作成する際は [dnssec-corrupt-zone](https://github.com/yoshigoto/dnssec-corrupt-zone) を用いています。
-このツールでは、DS や DNSKEY の破損に加えて、NSEC / NSEC3 の不在証明や型ビットマップの破損を意図的に作成できます。Opt-Out NSEC3 のケースは `nsec3-optout-cover-mismatch` モードで作成しています。
+検証用のドメイン名を作成する際は [dnssec-corrupt-zone](https://github.com/yoshigoto/dnssec-corrupt-zone) を用いています。掲載するドメイン名は [アルゴリズム別ゾーンテンプレート](https://github.com/yoshigoto/dnssec-corrupt-zone/blob/main/templates/template.algorithm.dnssec-check.jp.zone) と [Opt-Out用ゾーンテンプレート](https://github.com/yoshigoto/dnssec-corrupt-zone/blob/main/templates/template.optout.algorithm.dnssec-check.jp.zone) のレコード名を含めています。
+このツールでは、DS や DNSKEY の破損に加えて、NSEC / NSEC3 の不在証明や型ビットマップの破損を意図的に作成できます。`corrupted`、`missing`、`target` などは各ゾーン内で定義されたレコード名であり、検証用ドメイン名の先頭に保持します。Opt-Out NSEC3 のケースは `nsec3-optout-cover-mismatch` モードで作成し、未署名委任名 `unsigned` も完全な検証用ドメイン名に含めています。
 そのため、ドメイン名の命名規則には、失敗パターンの種類と対象の署名アルゴリズムが反映されており、たとえば `missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp` などの形式で管理しています。
