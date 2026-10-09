@@ -143,6 +143,7 @@ class DomainNamingTest(unittest.TestCase):
             "missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp",
             "target.type.mismatch.nsec.rsasha256.dnssec-check.jp",
             "missing.cover.mismatch.nsec3.rsasha256.dnssec-check.jp",
+            "unsigned.optout.mismatch.nsec3.rsasha256.dnssec-check.jp",
             "target.type.mismatch.nsec3.rsasha256.dnssec-check.jp",
         )
         actual_domains = []
