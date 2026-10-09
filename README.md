@@ -63,9 +63,11 @@ curl -fsS http://127.0.0.1:8000/index.html | grep -q '<title>'
 | 失敗パターン：NODATA不在証明の不整合 (NSEC) | NSEC の型ビットマップと実際の応答が不一致で、NODATA の証明が破綻する |
 | 失敗パターン：不在証明のカバー不成立 (NSEC3) | NSEC3 の Next Hashed Owner Name が対象名を正しくカバーせず、NXDOMAIN の証明に失敗する |
 | 失敗パターン：NODATA不在証明の不整合 (NSEC3) | NSEC3 の型ビットマップと実際の応答が不一致で、NODATA の証明が破綻する |
+| 失敗パターン：Opt-Out 不在証明のカバー不成立 (NSEC3) | 指定名 `unsigned` を覆う Opt-Out フラグ付き NSEC3 のカバー範囲が壊れており、不在証明の検証に失敗する |
 
 ドメイン名は `<パターン>.<アルゴリズム>.dnssec-check.jp` の形式で構成されています（例：`success.rsasha256.dnssec-check.jp`）。
 NSEC や NSEC3 のケースでは、対象名や不整合の種類を名前に含めており、例として `missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp` や `target.type.mismatch.nsec3.rsasha256.dnssec-check.jp` のように命名しています。
+Opt-Out NSEC3 のカバー不成立ケースは `unsigned.optout.mismatch.nsec3.rsasha256.dnssec-check.jp` です。
 NSEC および NSEC3 の不在証明検証は、RSASHA256 のドメインで確認します。
 
 Aリソースレコードの署名検証では、`corrupted.sign.a.<アルゴリズム>.dnssec-check.jp` の形式で命名しています。これらは `www.` を付けた委任状態確認用ドメインとは別の目的で使用します。
@@ -78,5 +80,5 @@ Aリソースレコードの署名検証では、`corrupted.sign.a.<アルゴリ
 ## 検証用のドメイン名について
 
 検証用のドメイン名を作成する際は [dnssec-corrupt-zone](https://github.com/yoshigoto/dnssec-corrupt-zone) を用いています。
-このツールでは、DS や DNSKEY の破損に加えて、NSEC / NSEC3 の不在証明や型ビットマップの破損を意図的に作成できます。
+このツールでは、DS や DNSKEY の破損に加えて、NSEC / NSEC3 の不在証明や型ビットマップの破損を意図的に作成できます。Opt-Out NSEC3 のケースは `nsec3-optout-cover-mismatch` モードで作成しています。
 そのため、ドメイン名の命名規則には、失敗パターンの種類と対象の署名アルゴリズムが反映されており、たとえば `missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp` などの形式で管理しています。
