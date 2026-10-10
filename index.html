@@ -73,6 +73,10 @@
         ※ 表中の「期待される総合判定」は、検証ツール等で検証した場合の最終的な判定結果を示しています。<br>
         ※ 各アルゴリズム見出し（RSASHA256、ED25519等）は子ゾーンのDNSKEYやAレコード等の署名アルゴリズムを指しています。親ゾーン（.jp）のDS RRset署名（RRSIG）アルゴリズムを指すものではありません。
     </p>
+    <p>
+        ドメイン名のラベルは検証する不整合を表します。<code>success</code> は正常系、<code>keytag.ds.error</code> と <code>hash.ds.error</code> は親DSと子DNSKEYの不一致、<code>sign.ds.error</code> と <code>sign.dnskey.error</code> はそれぞれ親DS・子DNSKEYの署名破損、<code>expire.dnskey.error</code> は子DNSKEY署名の期限切れです。<code>corrupted.sign.a.error</code> は A RRset 署名の破損を示します。
+        <code>missing.cover.mismatch</code> は不在名を覆うNSEC/NSEC3の範囲、<code>target.type.mismatch</code> は不在証明の型ビットマップの不整合を示します。型ビットマップ名にある <code>mx</code>・<code>txt</code> は問い合わせ型です。NSEC3名の <code>iter0</code>・<code>iter1</code> は反復回数、<code>nosalt</code>・<code>saltA1B2</code> はsalt設定です。<code>unsigned.optout.mismatch</code> はDSのない未署名委任 <code>unsigned</code> に対するOpt-Out不在証明の不整合です。
+    </p>
 
     <nav class="toc">
         目次
@@ -268,7 +272,7 @@
     </table>
 
     <h3 id="a-record">Aレコード署名検証</h3>
-    <p>Aレコードの署名破損を確認するため、各アルゴリズムの専用ドメインを検証します。</p>
+    <p><code>corrupted.sign.a.error.&lt;アルゴリズム&gt;</code> は、対象名の A RRset を覆うRRSIGの署名値を破損したケースです。信頼の連鎖やDNSKEY署名ではなく、Aレコード自体の署名検証を確認します。</p>
     <table>
         <thead>
             <tr><th>期待される総合判定</th><th>アルゴリズム</th><th>パターン</th><th>検証用ドメイン名</th></tr>
@@ -311,22 +315,22 @@
         <tbody>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>不在証明のカバー不成立 (NXDOMAINに必要なカバーが成立しない：NSECのNext Domain Nameを所有者名に設定)</td>
+                <td>NXDOMAINの不在証明のカバー不成立 (不在名を覆うNSECの Next Domain Name をその不在名に変更。範囲の終端は含まれないためカバーが成立しない)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>NODATA不在証明の不整合 (A問い合わせに対する NSECビットマップの不整合：AAAAを持つドメイン名の NSECビットマップに Aを追加)</td>
+                <td>NODATA不在証明の不整合 (AAAAだけを持つ名前へのA問い合わせ。実際の応答はNODATAだが、NSECの型ビットマップに存在しない A を追加)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mismatch.nsec.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">target.type.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>NODATA不在証明の不整合 (MX問い合わせに対する NSECビットマップの不整合：AAAAを持つドメイン名の NSECビットマップに MXを追加)</td>
+                <td>NODATA不在証明の不整合 (AAAAだけを持つ名前へのMX問い合わせ。実際の応答はNODATAだが、NSECの型ビットマップに存在しない MX を追加)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mx.mismatch.nsec.rsasha256.dnssec-check.jp&recordType=MX" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">target.type.mx.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>NODATA不在証明の不整合 (TXT問い合わせに対する NSECビットマップの不整合：AAAAを持つドメイン名の NSECビットマップに TXTを追加)</td>
+                <td>NODATA不在証明の不整合 (AAAAだけを持つ名前へのTXT問い合わせ。実際の応答はNODATAだが、NSECの型ビットマップに存在しない TXT を追加)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.txt.mismatch.nsec.rsasha256.dnssec-check.jp&recordType=TXT" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">target.type.txt.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
             </tr>
         </tbody>
@@ -340,72 +344,72 @@
         <tbody>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>NODATA不在証明の不整合 (MX問い合わせに対する NSEC3ビットマップの不整合：AAAAを持つドメイン名の NSEC3ビットマップに MXを追加)</td>
+                <td>NODATA不在証明の不整合 (AAAAだけを持つ名前へのMX問い合わせ。実際の応答はNODATAだが、NSEC3の型ビットマップに存在しない MX を追加)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mx.mismatch.nsec3.rsasha256.dnssec-check.jp&recordType=MX" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">target.type.mx.mismatch.nsec3.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>NODATA不在証明の不整合 (TXT問い合わせに対する NSEC3ビットマップの不整合：AAAAを持つドメイン名の NSEC3ビットマップに TXTを追加)</td>
+                <td>NODATA不在証明の不整合 (AAAAだけを持つ名前へのTXT問い合わせ。実際の応答はNODATAだが、NSEC3の型ビットマップに存在しない TXT を追加)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.txt.mismatch.nsec3.rsasha256.dnssec-check.jp&recordType=TXT" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">target.type.txt.mismatch.nsec3.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>NSEC3不在証明のカバー不成立 (反復回数0、saltなし。NXDOMAINに必要なnext closer/ワイルドカードのカバーが成立しない：NSEC3の Next Hashed Owner Nameを所有者ハッシュに設定)</td>
+                <td>NXDOMAINのNSEC3不在証明のカバー不成立 (反復回数0、saltなし。不在名のハッシュを Next Hashed Owner Name に設定するため、範囲の終端が含まれずカバーが成立しない)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec3.iter0.nosalt.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">missing.cover.mismatch.nsec3.iter0.nosalt.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>NODATA不在証明の不整合 (反復回数0、saltなし。A問い合わせに対する NSEC3ビットマップの不整合：AAAAを持つドメイン名の NSEC3ビットマップに Aを追加)</td>
+                <td>NODATA不在証明の不整合 (反復回数0、saltなし。AAAAだけを持つ名前へのA問い合わせで、NSEC3の型ビットマップに存在しない A を追加)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mismatch.nsec3.iter0.nosalt.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">target.type.mismatch.nsec3.iter0.nosalt.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>Opt-Outフラグ付きNSEC3のカバー不成立 (反復回数0、saltなし。未署名委任情報を含む範囲の破壊：NSEC3の Next Hashed Owner Nameを委任情報のハッシュに設定)</td>
+                <td>Opt-OutのDS不在証明のカバー不成立 (反復回数0、saltなし。未署名委任 <code>unsigned</code> のハッシュを Next に設定し、終端を含まない範囲にする。署名自体は有効)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=unsigned.optout.mismatch.nsec3.iter0.nosalt.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">unsigned.optout.mismatch.nsec3.iter0.nosalt.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>NSEC3不在証明のカバー不成立 (反復回数0、salt A1B2)</td>
+                <td>NXDOMAINのNSEC3不在証明のカバー不成立 (反復回数0、salt A1B2。不在名のハッシュを Next Hashed Owner Name に設定し、範囲の終端を含めない)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec3.iter0.saltA1B2.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">missing.cover.mismatch.nsec3.iter0.saltA1B2.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>NODATA不在証明の不整合 (反復回数0、salt A1B2)</td>
+                <td>NODATA不在証明の不整合 (反復回数0、salt A1B2。AAAAだけを持つ名前へのA問い合わせで、型ビットマップに存在しない A を追加)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mismatch.nsec3.iter0.saltA1B2.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">target.type.mismatch.nsec3.iter0.saltA1B2.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>Opt-Outフラグ付きNSEC3のカバー不成立 (反復回数0、salt A1B2)</td>
+                <td>Opt-OutのDS不在証明のカバー不成立 (反復回数0、salt A1B2。未署名委任 <code>unsigned</code> のハッシュを Next に設定し、終端を含まない範囲にする。署名自体は有効)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=unsigned.optout.mismatch.nsec3.iter0.saltA1B2.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">unsigned.optout.mismatch.nsec3.iter0.saltA1B2.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>NSEC3不在証明のカバー不成立 (反復回数1、saltなし)</td>
+                <td>NXDOMAINのNSEC3不在証明のカバー不成立 (反復回数1、saltなし。不在名のハッシュを Next Hashed Owner Name に設定し、範囲の終端を含めない)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec3.iter1.nosalt.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">missing.cover.mismatch.nsec3.iter1.nosalt.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>NODATA不在証明の不整合 (反復回数1、saltなし)</td>
+                <td>NODATA不在証明の不整合 (反復回数1、saltなし。AAAAだけを持つ名前へのA問い合わせで、型ビットマップに存在しない A を追加)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mismatch.nsec3.iter1.nosalt.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">target.type.mismatch.nsec3.iter1.nosalt.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>Opt-Outフラグ付きNSEC3のカバー不成立 (反復回数1、saltなし)</td>
+                <td>Opt-OutのDS不在証明のカバー不成立 (反復回数1、saltなし。未署名委任 <code>unsigned</code> のハッシュを Next に設定し、終端を含まない範囲にする。署名自体は有効)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=unsigned.optout.mismatch.nsec3.iter1.nosalt.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">unsigned.optout.mismatch.nsec3.iter1.nosalt.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>NSEC3不在証明のカバー不成立 (反復回数1、salt A1B2)</td>
+                <td>NXDOMAINのNSEC3不在証明のカバー不成立 (反復回数1、salt A1B2。不在名のハッシュを Next Hashed Owner Name に設定し、範囲の終端を含めない)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec3.iter1.saltA1B2.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">missing.cover.mismatch.nsec3.iter1.saltA1B2.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>NODATA不在証明の不整合 (反復回数1、salt A1B2)</td>
+                <td>NODATA不在証明の不整合 (反復回数1、salt A1B2。AAAAだけを持つ名前へのA問い合わせで、型ビットマップに存在しない A を追加)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mismatch.nsec3.iter1.saltA1B2.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">target.type.mismatch.nsec3.iter1.saltA1B2.rsasha256.dnssec-check.jp</span></td>
             </tr>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>Opt-Outフラグ付きNSEC3のカバー不成立 (反復回数1、salt A1B2)</td>
+                <td>Opt-OutのDS不在証明のカバー不成立 (反復回数1、salt A1B2。未署名委任 <code>unsigned</code> のハッシュを Next に設定し、終端を含まない範囲にする。署名自体は有効)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=unsigned.optout.mismatch.nsec3.iter1.saltA1B2.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">unsigned.optout.mismatch.nsec3.iter1.saltA1B2.rsasha256.dnssec-check.jp</span></td>
             </tr>
         </tbody>
