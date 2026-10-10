@@ -128,17 +128,32 @@
 
     <h2>4. NSECの範囲は正規順序上の区間</h2>
     <p>
-        各NSECレコードは、自分の所有者名から正規順序で次にある名前を指します。
-        最後の名前は最初の名前へつながり、ゾーン内の名前が一周する鎖になります。
-        ある名前が存在しないことを示すには、その名前が鎖の隣り合う二つの名前の間にあることを示します。
+        NSECリソースレコードには、所有者名（Owner Name）、次のドメイン名（Next Domain Name）、型ビットマップ（Type Bit Maps）があります。
+        Owner Nameは、そのNSECレコードが置かれ、かつ存在を示す名前です。Next Domain Nameは、Owner Nameの次に正規順序で並ぶゾーン内の名前です。
+        最後の名前の次は最初の名前に戻り、ゾーン内の名前が一周する鎖になります。
     </p>
-    <pre>... → a.b.example. → z.example. → ...
-                   ↑
-       c.example. はこの間にある</pre>
+    <table>
+        <thead>
+            <tr><th>フィールド</th><th>意味</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Owner Name</td><td>このNSECレコードが属する既存の名前。NSECの所有者名自体が、その名前の存在を示します。</td></tr>
+            <tr><td>Next Domain Name</td><td>Owner Nameの次に正規順序で並ぶ既存の名前。Owner NameからNext Domain Nameまでの間に、他のゾーン内の名前がないことを示します。区間の端点は含みません。</td></tr>
+            <tr><td>Type Bit Maps</td><td>Owner Nameに存在するレコード型の一覧（ビットマップ表現）。問い合わせ型が一覧にないことを、NODATAの証拠として使います。</td></tr>
+        </tbody>
+    </table>
+    <p>ゾーンファイルでの形は次のとおりです（TTL・クラス等は省略）。</p>
+    <pre>owner.example.  IN  NSEC  next.example.  A NS SOA RRSIG NSEC DNSKEY</pre>
+    <p>たとえば、次のNSECレコードがあるとします。</p>
+    <pre>a.b.example.  IN  NSEC  z.example.  A RRSIG NSEC</pre>
     <p>
-        たとえば上の並びでは <code>a.b.example.</code> と <code>z.example.</code> の間に <code>c.example.</code> が来ます。
-        このNSECのつながりは <code>c.example.</code> が存在しないことの証拠になり得ます。
-        区間の端点は含みません。端点そのものは存在する名前なので、対応するレコードで扱います。
+        Owner Nameの <code>a.b.example.</code> は存在し、次の <code>z.example.</code> までの正規順序上の区間には名前がありません。
+        そのため、その区間内にある問い合わせ名（例：<code>c.example.</code>）が存在しないことの証拠になります。
+        Type Bit Mapsに <code>A</code> があればOwner NameにはAレコードがあり、なければ、ほかの条件も満たす場合にA問い合わせへのNODATA証明に使えます。
+    </p>
+    <p>
+        <code>NXDOMAIN</code> では、問い合わせ名が存在しない証拠だけでは不十分です。Closest Encloser直下のワイルドカード名も存在しないことを証明し、ワイルドカードから応答が生成されていないことを示します。
+        NSECでは一般に、問い合わせ名を覆う証拠とワイルドカード名を覆う証拠という<strong>複数の証拠</strong>が必要です。一方、既存名への <code>NODATA</code> では、その名前のNSECとType Bit Mapsが主な証拠になります。
     </p>
 
     <h2>5. NSEC3では順序の対象がハッシュになる</h2>
@@ -146,6 +161,26 @@
         NSEC3は名前をハッシュ化し、Base32hexで表したハッシュ値を並べて鎖を作ります。
         範囲判定で比べるのは元のドメイン名ではなく、同じハッシュ方式・salt・反復回数で計算したハッシュ値です。
         ハッシュ値の順番から、元の名前のラベル数や親子関係を読み取ることはできません。
+    </p>
+    <p>
+        NSEC3にもOwner Name、Next Hashed Owner Name、Type Bit Mapsがあります。Owner Nameの左端ラベルは、元の名前をハッシュ化してBase32hexで表した値です。
+        つまり、Owner Nameは「このハッシュに対応する名前がある」ことを示します。Next Hashed Owner Nameは、ハッシュ値の正規順序で次に並ぶNSEC3鎖に含まれる名前のハッシュです。
+        Type Bit Mapsは、Owner Nameのハッシュ元となった名前に存在するレコード型を示します。
+    </p>
+    <table>
+        <thead>
+            <tr><th>フィールド</th><th>意味</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Owner Name</td><td><code>&lt;Base32hexハッシュ&gt;.&lt;ゾーン名&gt;.</code>。左端のラベルは既存名のハッシュで、その名前の存在を示します。</td></tr>
+            <tr><td>Next Hashed Owner Name</td><td>ハッシュ値の正規順序で次に並ぶ、NSEC3鎖に含まれる名前のハッシュ。Owner Nameのハッシュから次のハッシュまでの間に、ほかの鎖上のハッシュがないことを示します。区間の端点は含みません。</td></tr>
+            <tr><td>Type Bit Maps</td><td>Owner Nameのハッシュ元となった名前に存在するレコード型の一覧。問い合わせ型がないことをNODATAの証拠として使います。</td></tr>
+        </tbody>
+    </table>
+    <p>ゾーンファイルでの形は次のとおりです（各パラメーターの詳細は省略）。</p>
+    <pre>&lt;Base32hexハッシュ&gt;.example.  IN  NSEC3  1 0 0 - &lt;次のハッシュ&gt;  A RRSIG</pre>
+    <p class="note">
+        NSEC3レコードには、Type Bit Maps以外にハッシュアルゴリズム、フラグ、反復回数、saltもあります。ここでの例の <code>1 0 0 -</code> は、それぞれSHA-1、フラグなし、反復回数0、saltなしを表す簡略例です。
     </p>
     <h3>Base32hexに変換してもハッシュ値の順序が保たれる理由</h3>
     <p>
@@ -185,6 +220,10 @@ NSEC3の証拠で行う:
         NXDOMAINではさらにClosest Encloser直下のワイルドカード名（この例では <code>*.gov.example.</code>）が存在しないことも証明します。
         Next Closer Nameをハッシュ順序で探したり、ハッシュ値のラベル数を見たりするわけではありません。
     </p>
+    <p>
+        したがって、NSEC3のNXDOMAIN証明も一つのレコードだけで完了するとは限りません。通常は、Closest Encloserのハッシュが登録済みである証拠、Next Closer Nameのハッシュを覆う証拠、ワイルドカード名のハッシュを覆う証拠を組み合わせます。
+        これらは<strong>複数の証明要素</strong>であり、範囲が重なる場合は同じNSEC3レコードが複数の役割を満たすこともあります。NODATAでは、通常、対象名のハッシュと一致するNSEC3レコードのType Bit Mapsが主な証拠です。
+    </p>
     <h2>6. Opt-Out：DSのない委任をハッシュ鎖から省略する</h2>
     <p>
         DNSSECに対応していない子ゾーンへの委任（親ゾーンにNSはあるがDSはない委任）は、親ゾーンに存在する名前ですが、DNSSECで署名された子ゾーンではありません。
@@ -223,6 +262,7 @@ NSEC3の証拠で行う:
         <li><a href="https://blog.verisign.com/security/cryptographic-tools-for-non-existence-in-the-domain-name-system-nsec-and-nsec3/">Verisign: Cryptographic Tools for Non-Existence in the Domain Name System: NSEC and NSEC3</a> — NSECの名前の並びとNSEC3のハッシュを図で比較できる導入資料です。Closest EncloserとNext Closer Nameの手順は、上の説明で補っています。</li>
         <li><a href="https://www.rfc-editor.org/rfc/rfc4034#section-6.1">RFC 4034, Section 6.1</a> — DNS名の正規順序の仕様です。</li>
         <li><a href="https://www.rfc-editor.org/rfc/rfc4034#section-4">RFC 4034, Section 4</a> — NSECレコードの仕様です。</li>
+        <li><a href="https://www.rfc-editor.org/rfc/rfc4035#section-3.1.3.2">RFC 4035, Section 3.1.3.2</a> — NSECを使った否定応答の検証要件です。</li>
         <li><a href="https://www.rfc-editor.org/rfc/rfc4648#section-7">RFC 4648, Section 7</a> — Base32hexの文字と5ビット値の対応を定義しています。</li>
         <li><a href="https://www.rfc-editor.org/rfc/rfc5155#section-5">RFC 5155, Section 5</a> — NSEC3レコードの形式とハッシュ値を定義しています。</li>
         <li><a href="https://www.rfc-editor.org/rfc/rfc5155#section-6">RFC 5155, Section 6</a> — NSEC3のOpt-Outフラグとその意味を定義しています。</li>
