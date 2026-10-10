@@ -252,7 +252,7 @@ NSEC3の証拠で行う:
     </p>
     <p class="note">
         Opt-Outの範囲は、未署名委任のハッシュだけでなく、委任ではない名前のハッシュや実在しない名前のハッシュも含み得ます。そのため、Opt-Out付きの範囲だけでは、任意の名前が存在しないこと（NXDOMAIN）や、範囲内の名前が必ず未署名委任であることは証明できません。
-        通常のNXDOMAIN証明で必要になるNext Closer Nameやワイルドカード名の不在証明と、DS不在の証明を区別してください。
+        通常のNXDOMAIN証明で必要になるNext Closer Nameやワイルドカード名の不在証明と、DS不在の証明は異なるということです。
     </p>
     <p>
         このページで扱う <code>unsigned.optout.mismatch</code> の例は、存在するDSなし委任 <code>unsigned</code> を覆うOpt-Outフラグ付き範囲の終端を、その委任のハッシュに変更しています。
