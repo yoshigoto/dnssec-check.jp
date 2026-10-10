@@ -149,7 +149,7 @@
     <p>
         Owner Nameの <code>a.b.example.</code> は存在し、次の <code>z.example.</code> までの正規順序上の区間には名前がありません。
         そのため、その区間内にある問い合わせ名（例：<code>c.example.</code>）が存在しないことの証拠になります。
-        Type Bit Mapsに <code>A</code> があればOwner NameにはAレコードがあり、なければ、ほかの条件も満たす場合にA問い合わせへのNODATA証明に使えます。
+        Type Bit Mapsに <code>A</code> があればOwner NameにはAレコードがあり、なければ、他の条件も満たす必要がありますが、A問い合わせへのNODATA証明に使えます。
     </p>
     <p>
         <code>NXDOMAIN</code> では、問い合わせ名が存在しない証拠だけでは不十分です。Closest Encloser直下のワイルドカード名も存在しないことを証明し、ワイルドカードから応答が生成されていないことを示します。
@@ -173,7 +173,7 @@
         </thead>
         <tbody>
             <tr><td>Owner Name</td><td><code>&lt;Base32hexハッシュ&gt;.&lt;ゾーン名&gt;.</code>。左端のラベルは既存名のハッシュで、その名前の存在を示します。</td></tr>
-            <tr><td>Next Hashed Owner Name</td><td>ハッシュ値の正規順序で次に並ぶ、NSEC3鎖に含まれる名前のハッシュ。Owner Nameのハッシュから次のハッシュまでの間に、ほかの鎖上のハッシュがないことを示します。区間の端点は含みません。</td></tr>
+            <tr><td>Next Hashed Owner Name</td><td>ハッシュ値の正規順序で次に並ぶ、NSEC3鎖に含まれる名前のハッシュ。Owner Nameのハッシュから次のハッシュまでの間に、他の鎖上のハッシュがないことを示します。区間の端点は含みません。</td></tr>
             <tr><td>Type Bit Maps</td><td>Owner Nameのハッシュ元となった名前に存在するレコード型の一覧。問い合わせ型がないことをNODATAの証拠として使います。</td></tr>
         </tbody>
     </table>
