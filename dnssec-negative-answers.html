@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DNSSECの否定応答を理解する - NSECとNSEC3</title>
+    <style>
+        :root {
+            --border-color: #d0d7de;
+            --header-bg: #f6f8fa;
+            --note-bg: #fff8c5;
+        }
+        body {
+            font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+            line-height: 1.7;
+            color: #1f2328;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 1.5em;
+        }
+        h1, h2 { line-height: 1.35; }
+        h1 { border-bottom: 2px solid var(--border-color); padding-bottom: 0.4em; }
+        h2 {
+            margin-top: 2em;
+            padding: 0.3em 0.6em;
+            background: var(--header-bg);
+            border-left: 4px solid #57606a;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.6em 0.8em;
+            text-align: left;
+            vertical-align: top;
+        }
+        th { background: var(--header-bg); }
+        code, pre { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+        pre {
+            background: var(--header-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow-x: auto;
+            padding: 1em;
+            line-height: 1.5;
+        }
+        .note {
+            background: var(--note-bg);
+            border-radius: 6px;
+            padding: 0.8em 1em;
+        }
+        .back { margin-top: 2em; }
+        @media (max-width: 640px) {
+            body { padding: 1em; }
+            table { font-size: 0.9em; }
+            th, td { padding: 0.45em; }
+        }
+    </style>
+</head>
+<body>
+    <h1>DNSSECの否定応答を理解する<br>NSECとNSEC3の「範囲」</h1>
+    <p>
+        存在しない名前への問い合わせに対して、DNSSECは「ありません」という応答だけでなく、その答えが正しいことを検証できる証拠も返します。
+        その証拠に使われるNSECとNSEC3を理解するには、まず「名前の階層」と「名前の並び順」を別のものとして考えるのがポイントです。
+    </p>
+    <p class="note">
+        <strong>先に要点：</strong>名前の階層は「どの名前がどの名前の下にあるか」を表し、Closest EncloserやNext Closer Nameを決めます。
+        正規順序は「名前を一列に並べる順番」で、NSECの範囲を決めます。NSEC3では、名前をハッシュ化した後の並び順が範囲になります。
+        階層の深さと並び順は、別の軸です。
+    </p>
+
+    <h2>1. 否定応答では何を証明するのか</h2>
+    <p>
+        DNSの否定応答には、主に名前そのものが存在しない <code>NXDOMAIN</code> と、名前は存在するが問い合わせた種類のレコードがない <code>NODATA</code> があります。
+        署名は存在するRRsetに対して行われるため、空の否定応答そのものを署名するのではなく、ゾーン内の名前の存在や不在を示すNSEC/NSEC3レコードを署名して証拠にします。
+    </p>
+    <ul>
+        <li><strong>NSEC:</strong> 実際のドメイン名を正規順序で並べ、ある名前から次の名前へのつながりで、その間に名前がないことを示します。</li>
+        <li><strong>NSEC3:</strong> ドメイン名をハッシュ化してから並べ、あるハッシュから次のハッシュへのつながりで、その間に名前がないことを示します。</li>
+    </ul>
+
+    <h2>2. 名前の階層：ラベルが増える方向</h2>
+    <p>
+        ドメイン名の階層は、右端のラベルから左へたどります。<code>a.b.gov.example.</code> は <code>gov.example.</code> の下にあり、さらにその下に <code>b.gov.example.</code> があります。
+        より左側にラベルが増えるほど、名前は階層の下（より具体的な名前）に進みます。
+    </p>
+    <pre>example.
+└── gov.example.                 ← 既存の名前
+    └── b.gov.example.           ← 存在しない
+        └── a.b.gov.example.     ← 問い合わせた名前（存在しない）</pre>
+    <p>
+        この例では <code>gov.example.</code> が最も深い既存の祖先名、つまり <strong>Closest Encloser（最近接祖先名）</strong>です。
+        その一段下で問い合わせ名の祖先でもある <code>b.gov.example.</code> が <strong>Next Closer Name（次近接名）</strong>です。
+        Next Closer NameはClosest Encloserにラベルを一つ足した名前であり、問い合わせ名へ向かう階層上の位置で決まります。
+    </p>
+    <p>
+        実際には問い合わせ名から左端のラベルを順に取り除き、既存の名前に初めて行き当たるところをClosest Encloserとして見つけるイメージです。
+        この手順は名前の階層についてのもので、正規順序やハッシュ値の大小を使ってClosest Encloserを選ぶわけではありません。
+    </p>
+
+    <h2>3. 正規順序：名前を一列に並べる規則</h2>
+    <p>
+        DNSの正規順序は、ドメイン名を比較するための決まった順序です。人が左から読む通常の文字列順とは異なり、<strong>右端（ルートに近い側）のラベルから比較し、同じなら左へ進みます</strong>。
+        ラベル同士は大文字・小文字を同一視して比較し、片方のラベル列がもう片方の先頭部分と同じなら、短い方が先になります。
+    </p>
+    <p>次の名前だけがあると仮定したとき、正規順序は次のようになります。</p>
+    <table>
+        <thead>
+            <tr><th>順序</th><th>ドメイン名</th><th>比較の見方</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>1</td><td><code>example.</code></td><td>共通の親より先に続くラベルがなく、短い名前が先です。</td></tr>
+            <tr><td>2</td><td><code>a.example.</code></td><td><code>example</code> の左にあるラベル <code>a</code> で比較します。</td></tr>
+            <tr><td>3</td><td><code>b.example.</code></td><td><code>a</code> より <code>b</code> が後です。</td></tr>
+            <tr><td>4</td><td><code>a.b.example.</code></td><td><code>b.example.</code> と右側のラベルが一致し、短い <code>b.example.</code> の後になります。</td></tr>
+            <tr><td>5</td><td><code>z.example.</code></td><td><code>b</code> より <code>z</code> が後です。</td></tr>
+        </tbody>
+    </table>
+    <p>
+        この並びでは <code>b.example.</code>（2ラベル）が <code>a.b.example.</code>（3ラベル）より前です。
+        その一方で、<code>a.b.example.</code> は <code>b.example.</code> の子でもあります。
+        このように、階層上の親子関係と正規順序上の前後関係は別の情報です。
+    </p>
+
+    <h2>4. NSECの範囲は正規順序上の区間</h2>
+    <p>
+        各NSECレコードは、自分の所有者名から正規順序で次にある名前を指します。
+        最後の名前は最初の名前へつながり、ゾーン内の名前が一周する鎖になります。
+        ある名前が存在しないことを示すには、その名前が鎖の隣り合う二つの名前の間にあることを示します。
+    </p>
+    <pre>... → a.b.example. → z.example. → ...
+               ↑
+       c.example. はこの間にある</pre>
+    <p>
+        たとえば上の並びでは <code>a.b.example.</code> と <code>z.example.</code> の間に <code>c.example.</code> が来ます。
+        このNSECのつながりは <code>c.example.</code> が存在しないことの証拠になり得ます。
+        区間の端点は含みません。端点そのものは存在する名前なので、対応するレコードで扱います。
+    </p>
+
+    <h2>5. NSEC3では順序の対象がハッシュになる</h2>
+    <p>
+        NSEC3は名前をハッシュ化し、Base32hexで表したハッシュ値を並べて鎖を作ります。
+        範囲判定で比べるのは元のドメイン名ではなく、同じハッシュ方式・salt・反復回数で計算したハッシュ値です。
+        ハッシュ値の順番から、元の名前のラベル数や親子関係を読み取ることはできません。
+    </p>
+    <h3>Base32hexに変換してもハッシュ値の順序が保たれる理由</h3>
+    <p>
+        ここで保たれるのは、<strong>元のドメイン名の順序ではなく、計算済みハッシュ値の順序</strong>です。
+        NSEC3ではハッシュ値をBase32hexで表して所有者名に使いますが、Base32hexの文字は値の小さい順に
+        <code>0</code>〜<code>9</code>、<code>A</code>〜<code>V</code> と並んでいます。
+        NSEC3の所有者名は <code>&lt;ハッシュ&gt;.&lt;ゾーン名&gt;.</code> の形で、同じゾーン内では右側のゾーン名部分が共通です。DNS名の正規順序でその共通部分を比べた後、ハッシュのラベル内を左から比較すると、Base32hex文字列を比較した順序は符号化前のハッシュ値をバイト列として比較した順序と一致します。
+    </p>
+    <table>
+        <thead>
+            <tr><th>Base32hex文字</th><th>表す5ビット値</th><th>順序の例</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>0</code>〜<code>9</code></td><td>0〜9</td><td><code>8</code> &lt; <code>9</code> &lt; <code>A</code></td></tr>
+            <tr><td><code>A</code>〜<code>V</code></td><td>10〜31</td><td><code>A</code> &lt; <code>B</code> &lt; … &lt; <code>V</code></td></tr>
+        </tbody>
+    </table>
+    <p>
+        Base32hexはハッシュのビット列を先頭から5ビットずつ文字に対応させます。したがって、二つのハッシュ値で最初に異なる5ビットのまとまりがあれば、その値に対応する文字の大小も同じになります。
+        NSEC3のSHA-1ハッシュは160ビットで、ちょうど32文字のBase32hexになります。例えば先頭のまとまりが <code>01001</code> の値は <code>9</code>、<code>01010</code> の値は <code>A</code> となり、<code>9</code> が <code>A</code> より前に並ぶのは、元の5ビット値の大小と一致します。
+    </p>
+    <p class="note">
+        つまり、ハッシュ計算そのものがドメイン名の正規順序を保つわけではありません。ハッシュ化で元の順序との対応は失われますが、その後のBase32hex表記は、ハッシュ値同士の順序を保ちます。
+        NSEC3の所有者名にある符号化済みのハッシュと、Next Hashed Owner Nameに格納されたバイナリのハッシュを同じ順序で比較できるのはこのためです。
+    </p>
+    <pre>名前の階層で決める:
+  Closest Encloser = gov.example.
+  Next Closer Name = b.gov.example.
+
+NSEC3の証拠で行う:
+  gov.example.       → ハッシュが存在することを確認
+  b.gov.example.     → ハッシュがNSEC3の区間に入ることを確認
+  *.gov.example.     → ワイルドカード名が存在しないことを確認</pre>
+    <p>
+        つまり、Closest EncloserとNext Closer Nameは<strong>名前の階層</strong>から決めます。
+        その後、NSEC3ではClosest Encloserのハッシュが存在すること、Next Closer NameのハッシュがNSEC3の範囲で覆われることを確認します。
+        NXDOMAINではさらにClosest Encloser直下のワイルドカード名（この例では <code>*.gov.example.</code>）が存在しないことも証明します。
+        Next Closer Nameをハッシュ順序で探したり、ハッシュ値のラベル数を見たりするわけではありません。
+    </p>
+    <p class="note">
+        ここではOpt-Outを使わない基本ケースを説明しています。Opt-OutではDSのない委任名のハッシュが省略されることがあり、その場合は不在証明の扱いに追加の条件があります。
+    </p>
+
+    <h2>6. 参考資料</h2>
+    <ul>
+        <li><a href="https://blog.verisign.com/security/cryptographic-tools-for-non-existence-in-the-domain-name-system-nsec-and-nsec3/">Verisign: Cryptographic Tools for Non-Existence in the Domain Name System: NSEC and NSEC3</a> — NSECの名前の並びとNSEC3のハッシュを図で比較できる導入資料です。Closest EncloserとNext Closer Nameの手順は、上の説明で補っています。</li>
+        <li><a href="https://www.rfc-editor.org/rfc/rfc4034#section-6.1">RFC 4034, Section 6.1</a> — DNS名の正規順序の仕様です。</li>
+        <li><a href="https://www.rfc-editor.org/rfc/rfc4034#section-4">RFC 4034, Section 4</a> — NSECレコードの仕様です。</li>
+        <li><a href="https://www.rfc-editor.org/rfc/rfc4648#section-7">RFC 4648, Section 7</a> — Base32hexの文字と5ビット値の対応を定義しています。</li>
+        <li><a href="https://www.rfc-editor.org/rfc/rfc5155#section-5">RFC 5155, Section 5</a> — NSEC3レコードの形式とハッシュ値を定義しています。</li>
+        <li><a href="https://www.rfc-editor.org/rfc/rfc5155#section-7.2.1">RFC 5155, Section 7.2.1</a> — NSEC3を使ったNXDOMAINの証明手順です。</li>
+        <li><a href="https://dnsviz.net/">DNSViz</a> — 実在ドメインのDNSSEC認証経路や設定状態を可視化するツールです。概念の入門記事というより、実例を調べる用途に向いています。</li>
+        <li><a href="https://eng-blog.iij.ad.jp/archives/24512">IIJ Engineers Blog: DNSSECの否定応答の検証機能の実装</a> — 日本語でNSEC/NSEC3の範囲やClosest Encloser・Next Closer Nameを解説しています。</li>
+        <li><a href="https://kazu-yamamoto.hatenablog.jp/entry/2026/08/05/094422">NSEC3に関する備忘録</a> — NSECとNSEC3の違いや、NSEC3による否定証明を説明しています。</li>
+    </ul>
+    <p class="back"><a href="./index.html">DNSSEC信頼の連鎖確認ページへ戻る</a></p>
+</body>
+</html>

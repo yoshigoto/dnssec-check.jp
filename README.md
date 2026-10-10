@@ -15,7 +15,7 @@ DNSSECの信頼の連鎖（Chain of Trust）の検証結果を確認するため
 - ED25519
 - ED448
 
-このリポジトリでは、テストページの index.html をバージョン管理しています。
+このリポジトリでは、テストページの index.html と、NSEC/NSEC3による否定応答の解説ページをバージョン管理しています。
 
 ## 開発環境
 
@@ -76,6 +76,7 @@ Aリソースレコードの署名検証では、`corrupted.sign.a.error.<アル
 ## ファイル構成
 
 - [index.html](index.html) - 確認用リンク一覧を掲載したページ本体
+- [dnssec-negative-answers.html](dnssec-negative-answers.html) - DNSSECの否定応答、NSEC/NSEC3の順序、Closest EncloserとNext Closer Nameの解説
 - [test_domains.py](test_domains.py) - ドメイン名とリンク表示の整合性を確認するテスト
 
 ## 検証用のドメイン名について
