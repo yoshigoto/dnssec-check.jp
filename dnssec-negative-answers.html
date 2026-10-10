@@ -255,8 +255,10 @@ NSEC3の証拠で行う:
         通常のNXDOMAIN証明で必要になるNext Closer Nameやワイルドカード名の不在証明と、DS不在の証明は異なるということです。
     </p>
     <p>
-        このページで扱う <code>unsigned.optout.mismatch</code> の例は、存在するDSなし委任 <code>unsigned</code> を覆うOpt-Outフラグ付き範囲の終端を、その委任のハッシュに変更しています。
-        範囲の終端は含まれないため、<code>unsigned</code> のハッシュを範囲が覆わなくなり、DS不在の証拠が成立しません。ここで壊しているのは証明範囲であり、NSEC3署名そのものではありません。
+        このページで扱う <code>unsigned.optout.mismatch</code> の例では、存在するDSなし委任 <code>unsigned</code> を覆うOpt-Outフラグ付きNSEC3レコードの <strong>Next Hashed Owner Name</strong> を、その委任名 <code>unsigned</code> のハッシュに書き換えています。
+        NSEC3レコードが示す範囲は、Owner NameのハッシュからNext Hashed Owner Nameまでの間で、両端の値は含みません。
+        今回は上端のNext Hashed Owner Nameを <code>unsigned</code> のハッシュと同じ値にしたため、そのハッシュは範囲に含まれず、DS不在の証拠として使えなくなります。
+        ここで壊しているのは証明範囲であり、NSEC3署名そのものではありません（変更後のレコードは再署名されています）。
     </p>
 
     <h2>7. 参考資料</h2>
