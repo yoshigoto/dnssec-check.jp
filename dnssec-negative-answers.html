@@ -256,8 +256,9 @@ NSEC3の証拠で行う:
     </p>
     <p>
         このページで扱う <code>unsigned.optout.mismatch</code> の例では、存在するDSなし委任 <code>unsigned</code> を覆うOpt-Outフラグ付きNSEC3レコードの <strong>Next Hashed Owner Name</strong> を、その委任名 <code>unsigned</code> のハッシュに書き換えています。
-        NSEC3レコードが示す範囲は、Owner NameのハッシュからNext Hashed Owner Nameまでの間で、両端の値は含みません。
-        今回は上端のNext Hashed Owner Nameを <code>unsigned</code> のハッシュと同じ値にしたため、そのハッシュは範囲に含まれず、DS不在の証拠として使えなくなります。
+        NSEC3レコードはOwner Nameのハッシュに対応する名前が存在することを示し、Next Hashed Owner Nameは鎖上で次にある名前のハッシュを示します。その間には、（Opt-Outで省略された委任を除き）鎖に登録されたハッシュがありません。
+        したがって「Owner NameからNext Hashed Owner Nameまでの範囲」は、両端の名前自体を含む区間ではなく、二つの端点の間にある値を指します。端点はそれぞれ鎖上に存在する名前を表し、範囲内の不在名とは区別されます。
+        今回は上端のNext Hashed Owner Nameを <code>unsigned</code> のハッシュと同じ値にしたため、そのハッシュは端点に一致し、範囲内には入りません。このためDS不在の証拠として使えなくなります。
         ここで壊しているのは証明範囲であり、NSEC3署名そのものではありません（変更後のレコードは再署名されています）。
     </p>
 
