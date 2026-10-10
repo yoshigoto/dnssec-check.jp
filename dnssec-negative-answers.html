@@ -84,8 +84,8 @@
 
     <h2>2. 名前の階層：ラベルが増える方向</h2>
     <p>
-        ドメイン名の階層は、右端のラベルから左へたどります。<code>a.b.gov.example.</code> は <code>gov.example.</code> の下にあり、さらにその下に <code>b.gov.example.</code> があります。
-        より左側にラベルが増えるほど、名前は階層の下（より具体的な名前）に進みます。
+        ドメイン名の階層は、右端のラベルから左へたどります。サブドメイン関係を矢印で示すと、<code>gov.example.</code> → <code>b.gov.example.</code> → <code>a.b.gov.example.</code> の順です。
+        つまり <code>b.gov.example.</code> は <code>gov.example.</code> の直下にあり、<code>a.b.gov.example.</code> は <code>b.gov.example.</code> の直下にあります。左側にラベルを一つ加えるごとに、より具体的な名前になります。
     </p>
     <pre>example.
 └── gov.example.                 ← 既存の名前
