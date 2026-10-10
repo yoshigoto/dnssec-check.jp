@@ -184,18 +184,49 @@ NSEC3の証拠で行う:
         NXDOMAINではさらにClosest Encloser直下のワイルドカード名（この例では <code>*.gov.example.</code>）が存在しないことも証明します。
         Next Closer Nameをハッシュ順序で探したり、ハッシュ値のラベル数を見たりするわけではありません。
     </p>
+    <h2>6. Opt-Out：DSのない委任をハッシュ鎖から省略する</h2>
+    <p>
+        DNSSECに対応していない子ゾーンへの委任（親ゾーンにNSはあるがDSはない委任）は、親ゾーンに存在する名前ですが、DNSSECで署名された子ゾーンではありません。
+        通常のNSEC3ではその委任名のハッシュも鎖に含めます。大規模ゾーンでこのような委任が多数ある場合、<strong>Opt-Out</strong>を使うと、それらのハッシュをNSEC3鎖から省略できます。
+    </p>
+    <p>
+        省略された名前は、別の名前のNSEC3レコードが持つ範囲の中に入ります。そのNSEC3レコードのOpt-Outフラグは、「この範囲には、鎖に登録されていないDSなしの委任が含まれている可能性がある」ことを示します。
+        フラグが委任名そのものに付くのではなく、その名前のハッシュを覆う側のNSEC3レコードに付く点に注意してください。
+    </p>
+    <pre>親ゾーンの名前空間とNSEC3ハッシュ鎖（模式図）
+
+親ゾーン:
+  signed.example.       NS + DS   ← DNSSEC対応の子。ハッシュ鎖に含める
+  unsigned.example.     NS, DSなし ← DNSSEC未対応の子。Opt-Outで省略可能
+
+ハッシュ値の順序:
+  ... H(signed.example.)
+       ───── Opt-Outフラグ付きNSEC3の範囲 ─────
+       （この間に H(unsigned.example.) があっても鎖には載せない）
+       → 次に登録されているハッシュ ...</pre>
+    <p>
+        この仕組みで検証できるのは、主に委任先の <strong>DSがない</strong>ことです。リゾルバーは委任先へのDS問い合わせに対する証拠として、問い合わせ名のハッシュを覆うOpt-Outフラグ付きNSEC3を使い、その委任を「DNSSECで保護されていない（insecure）」と扱えます。
+        これは子ゾーンのDNSSEC署名を検証して安全と認定することとは異なります。
+    </p>
     <p class="note">
-        ここではOpt-Outを使わない基本ケースを説明しています。Opt-OutではDSのない委任名のハッシュが省略されることがあり、その場合は不在証明の扱いに追加の条件があります。
+        Opt-Outの範囲は、未署名委任のハッシュだけでなく、委任ではない名前のハッシュや実在しない名前のハッシュも含み得ます。そのため、Opt-Out付きの範囲だけでは、任意の名前が存在しないこと（NXDOMAIN）や、範囲内の名前が必ず未署名委任であることは証明できません。
+        通常のNXDOMAIN証明で必要になるNext Closer Nameやワイルドカード名の不在証明と、DS不在の証明を区別してください。
+    </p>
+    <p>
+        このページで扱う <code>unsigned.optout.mismatch</code> の例は、存在するDSなし委任 <code>unsigned</code> を覆うOpt-Outフラグ付き範囲の終端を、その委任のハッシュに変更しています。
+        範囲の終端は含まれないため、<code>unsigned</code> のハッシュを範囲が覆わなくなり、DS不在の証拠が成立しません。ここで壊しているのは証明範囲であり、NSEC3署名そのものではありません。
     </p>
 
-    <h2>6. 参考資料</h2>
+    <h2>7. 参考資料</h2>
     <ul>
         <li><a href="https://blog.verisign.com/security/cryptographic-tools-for-non-existence-in-the-domain-name-system-nsec-and-nsec3/">Verisign: Cryptographic Tools for Non-Existence in the Domain Name System: NSEC and NSEC3</a> — NSECの名前の並びとNSEC3のハッシュを図で比較できる導入資料です。Closest EncloserとNext Closer Nameの手順は、上の説明で補っています。</li>
         <li><a href="https://www.rfc-editor.org/rfc/rfc4034#section-6.1">RFC 4034, Section 6.1</a> — DNS名の正規順序の仕様です。</li>
         <li><a href="https://www.rfc-editor.org/rfc/rfc4034#section-4">RFC 4034, Section 4</a> — NSECレコードの仕様です。</li>
         <li><a href="https://www.rfc-editor.org/rfc/rfc4648#section-7">RFC 4648, Section 7</a> — Base32hexの文字と5ビット値の対応を定義しています。</li>
         <li><a href="https://www.rfc-editor.org/rfc/rfc5155#section-5">RFC 5155, Section 5</a> — NSEC3レコードの形式とハッシュ値を定義しています。</li>
+        <li><a href="https://www.rfc-editor.org/rfc/rfc5155#section-6">RFC 5155, Section 6</a> — NSEC3のOpt-Outフラグとその意味を定義しています。</li>
         <li><a href="https://www.rfc-editor.org/rfc/rfc5155#section-7.2.1">RFC 5155, Section 7.2.1</a> — NSEC3を使ったNXDOMAINの証明手順です。</li>
+        <li><a href="https://www.rfc-editor.org/rfc/rfc5155#section-7.2.3">RFC 5155, Section 7.2.3</a> — NSEC3を使ったDS不在の証明手順です。</li>
         <li><a href="https://dnsviz.net/">DNSViz</a> — 実在ドメインのDNSSEC認証経路や設定状態を可視化するツールです。概念の入門記事というより、実例を調べる用途に向いています。</li>
         <li><a href="https://eng-blog.iij.ad.jp/archives/24512">IIJ Engineers Blog: DNSSECの否定応答の検証機能の実装</a> — 日本語でNSEC/NSEC3の範囲やClosest Encloser・Next Closer Nameを解説しています。</li>
         <li><a href="https://kazu-yamamoto.hatenablog.jp/entry/2026/08/05/094422">NSEC3に関する備忘録</a> — NSECとNSEC3の違いや、NSEC3による否定証明を説明しています。</li>
