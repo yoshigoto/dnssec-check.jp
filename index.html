@@ -73,10 +73,46 @@
         ※ 表中の「期待される総合判定」は、検証ツール等で検証した場合の最終的な判定結果を示しています。<br>
         ※ 各アルゴリズム見出し（RSASHA256、ED25519等）は子ゾーンのDNSKEYやAレコード等の署名アルゴリズムを指しています。親ゾーン（.jp）のDS RRset署名（RRSIG）アルゴリズムを指すものではありません。
     </p>
-    <p>
-        ドメイン名のラベルは検証する不整合を表します。<code>success</code> は正常系、<code>keytag.ds.error</code> と <code>hash.ds.error</code> は親DSと子DNSKEYの不一致、<code>sign.ds.error</code> と <code>sign.dnskey.error</code> はそれぞれ親DS・子DNSKEYの署名破損、<code>expire.dnskey.error</code> は子DNSKEY署名の期限切れです。<code>corrupted.sign.a.error</code> は A RRset 署名の破損を示します。
-        <code>missing.cover.mismatch</code> は不在名を覆うNSEC/NSEC3の範囲、<code>target.type.mismatch</code> は不在証明の型ビットマップの不整合を示します。型ビットマップ名にある <code>mx</code>・<code>txt</code> は問い合わせ型です。NSEC3名の <code>iter0</code>・<code>iter1</code> は反復回数、<code>nosalt</code>・<code>saltA1B2</code> はsalt設定です。<code>unsigned.optout.mismatch</code> はDSのない未署名委任 <code>unsigned</code> に対するOpt-Out不在証明の不整合です。
-    </p>
+    <p>ドメイン名に含まれる主なラベルと検証内容は次のとおりです。</p>
+    <table>
+        <thead>
+            <tr><th>ドメイン名のラベル</th><th>検証内容</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>success</code></td>
+                <td>DNSSECの検証が成功する正常系です。</td>
+            </tr>
+            <tr>
+                <td><code>keytag.ds.error</code><br><code>hash.ds.error</code></td>
+                <td>親ゾーンのDSと子ゾーンのDNSKEYが、それぞれKey TagまたはDigestで一致しないケースです。</td>
+            </tr>
+            <tr>
+                <td><code>sign.ds.error</code><br><code>sign.dnskey.error</code><br><code>expire.dnskey.error</code></td>
+                <td>それぞれ親DS RRset署名の破損、子DNSKEY RRset署名の破損、子DNSKEY RRset署名の期限切れです。</td>
+            </tr>
+            <tr>
+                <td><code>corrupted.sign.a.error</code></td>
+                <td>A RRsetの署名（RRSIG）を破損したケースです。</td>
+            </tr>
+            <tr>
+                <td><code>missing.cover.mismatch</code></td>
+                <td>NSEC/NSEC3の範囲が不在名をカバーせず、不在証明が成立しないケースです。</td>
+            </tr>
+            <tr>
+                <td><code>target.type.mismatch</code><br><code>target.type.mx.mismatch</code><br><code>target.type.txt.mismatch</code></td>
+                <td>NSEC/NSEC3の型ビットマップと実際の応答が一致せず、NODATA不在証明が不整合になるケースです。<code>mx</code>・<code>txt</code> は問い合わせ型を表します。</td>
+            </tr>
+            <tr>
+                <td><code>unsigned.optout.mismatch</code></td>
+                <td>DSのない未署名委任 <code>unsigned</code> に対するOpt-OutのDS不在証明が成立しないケースです。</td>
+            </tr>
+            <tr>
+                <td><code>iter0</code>・<code>iter1</code><br><code>nosalt</code>・<code>saltA1B2</code></td>
+                <td>NSEC3のハッシュ計算に使う反復回数とsalt設定です。</td>
+            </tr>
+        </tbody>
+    </table>
 
     <nav class="toc">
         目次
