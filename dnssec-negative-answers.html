@@ -144,16 +144,17 @@
     </table>
     <p>ゾーンファイルでの形は次のとおりです（TTL・クラス等は省略）。</p>
     <pre>owner.example.  IN  NSEC  next.example.  A NS SOA RRSIG NSEC DNSKEY</pre>
-    <p>たとえば、次のNSECレコードがあるとします。</p>
-    <pre>a.b.example.  IN  NSEC  z.example.  A RRSIG NSEC</pre>
+    <p>正規順序の表にある名前だけが存在するものとして、次のNSECレコードがあるとします。</p>
+    <pre>ba.example.  IN  NSEC  z.example.  A RRSIG NSEC</pre>
     <p>
-        Owner Nameの <code>a.b.example.</code> は存在し、次の <code>z.example.</code> までの正規順序上の区間には名前がありません。
+        Owner Nameの <code>ba.example.</code> は存在し、次の <code>z.example.</code> までの正規順序上の区間には、ゾーン内に登録された他の名前がありません。
         そのため、その区間内にある問い合わせ名（例：<code>c.example.</code>）が存在しないことの証拠になります。
         Type Bit Mapsに <code>A</code> があればOwner NameにはAレコードがあり、なければ、他の条件も満たす必要がありますが、A問い合わせへのNODATA証明に使えます。
     </p>
     <p>
         <code>NXDOMAIN</code> では、問い合わせ名が存在しない証拠だけでは不十分です。Closest Encloser直下のワイルドカード名も存在しないことを証明し、ワイルドカードから応答が生成されていないことを示します。
-        NSECでは一般に、問い合わせ名を覆う証拠とワイルドカード名を覆う証拠という<strong>複数の証拠</strong>が必要です。一方、既存名への <code>NODATA</code> では、その名前のNSECとType Bit Mapsが主な証拠になります。
+        NSECでは、問い合わせ名を覆う証拠とワイルドカード名を覆う証拠という<strong>複数の証明要素</strong>が必要です。ただし、同じNSECレコードが両方の名前を覆う場合は、1つのレコードで両方を証明できます。
+        一方、既存名への <code>NODATA</code> では、その名前のNSECとType Bit Mapsが主な証拠になります。
     </p>
 
     <h2>5. NSEC3では順序の対象がハッシュになる</h2>
@@ -164,7 +165,8 @@
     </p>
     <p>
         NSEC3にもOwner Name、Next Hashed Owner Name、Type Bit Mapsがあります。Owner Nameの左端ラベルは、元の名前をハッシュ化してBase32hexで表した値です。
-        つまり、Owner Nameは「このハッシュに対応する名前がある」ことを示します。Next Hashed Owner Nameは、ハッシュ値の正規順序で次に並ぶNSEC3鎖に含まれる名前のハッシュです。
+        つまり、Owner Nameは「このハッシュに対応する名前がNSEC3鎖に登録されている」ことを示します。Opt-Outでは一部のDSなし委任のハッシュを鎖から省略できるため、親ゾーンに存在する名前すべてがOwner Nameに現れるわけではありません。
+        Next Hashed Owner Nameは、ハッシュ値の正規順序で次に並ぶNSEC3鎖に含まれる名前のハッシュです。
         Type Bit Mapsは、Owner Nameのハッシュ元となった名前に存在するレコード型を示します。
     </p>
     <table>
@@ -172,8 +174,8 @@
             <tr><th>フィールド</th><th>意味</th></tr>
         </thead>
         <tbody>
-            <tr><td>Owner Name</td><td><code>&lt;Base32hexハッシュ&gt;.&lt;ゾーン名&gt;.</code>。左端のラベルは既存名のハッシュで、その名前の存在を示します。</td></tr>
-            <tr><td>Next Hashed Owner Name</td><td>ハッシュ値の正規順序で次に並ぶ、NSEC3鎖に含まれる名前のハッシュ。Owner Nameのハッシュから次のハッシュまでの間に、他の鎖上のハッシュがないことを示します。区間の端点は含みません。</td></tr>
+            <tr><td>Owner Name</td><td><code>&lt;Base32hexハッシュ&gt;.&lt;ゾーン名&gt;.</code>。左端のラベルはNSEC3鎖に登録された名前のハッシュで、その名前の存在を示します。Opt-Outで省略されたDSなし委任は、Owner Nameに現れないことがあります。</td></tr>
+            <tr><td>Next Hashed Owner Name</td><td>ハッシュ値の正規順序で次に並ぶ、NSEC3鎖に含まれる名前のハッシュ。Owner Nameのハッシュから次のハッシュまでの間に、他の鎖上のハッシュがないことを示します（Opt-Outでは、省略されたDSなし委任がこの間に存在する場合があります）。区間の端点は含みません。</td></tr>
             <tr><td>Type Bit Maps</td><td>Owner Nameのハッシュ元となった名前に存在するレコード型の一覧。問い合わせ型がないことをNODATAの証拠として使います。</td></tr>
         </tbody>
     </table>
@@ -214,6 +216,9 @@ NSEC3の証拠で行う:
   gov.example.       → ハッシュが存在することを確認
   b.gov.example.     → ハッシュがNSEC3の区間に入ることを確認
   *.gov.example.     → ワイルドカード名が存在しないことを確認</pre>
+    <p class="note">
+        ここからClosest Encloserのハッシュ一致を使う説明は、Opt-Outを使わない基本ケースです。Opt-Out時にClosest Encloserのハッシュが省略されている場合は、NSEC3で存在を証明できる最も近い祖先を使います。詳細は次章で説明します。
+    </p>
     <p>
         つまり、Closest EncloserとNext Closer Nameは<strong>名前の階層</strong>から決めます。
         その後、NSEC3ではClosest Encloserのハッシュが存在すること、Next Closer NameのハッシュがNSEC3の範囲で覆われることを確認します。
@@ -234,6 +239,11 @@ NSEC3の証拠で行う:
     <p>
         省略された名前は、別の名前のNSEC3レコードが持つ範囲の中に入ります。そのNSEC3レコードのOpt-Outフラグは、「この範囲には、鎖に登録されていないDSなしの委任が含まれている可能性がある」ことを示します。
         フラグが委任名そのものに付くのではなく、その名前のハッシュを覆う側のNSEC3レコードに付く点に注意してください。
+    </p>
+    <p>
+        Opt-Outで実際のClosest Encloserのハッシュが鎖から省略されていると、NSEC3ではその名前の存在を直接証明できません。
+        その場合、実際のClosest Encloserではなく、NSEC3で存在を証明できる最も近い祖先を<strong>Closest Provable Encloser（最近接証明可能祖先名）</strong>として使います。Next Closer Nameも、このClosest Provable Encloserから問い合わせ名へ向かって一つラベルを加えた名前として求めます。
+        RFC 5155では、Opt-Out zoneではClosest EncloserとClosest Provable Encloserが異なる場合があると定義しています。
     </p>
     <pre>親ゾーンの名前空間とNSEC3ハッシュ鎖（模式図）
 
