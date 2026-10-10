@@ -114,9 +114,10 @@
         <tbody>
             <tr><td>1</td><td><code>example.</code></td><td>共通の親より先に続くラベルがなく、短い名前が先です。</td></tr>
             <tr><td>2</td><td><code>a.example.</code></td><td><code>example</code> の左にあるラベル <code>a</code> で比較します。</td></tr>
-            <tr><td>3</td><td><code>b.example.</code></td><td><code>a</code> より <code>b</code> が後です。</td></tr>
-            <tr><td>4</td><td><code>a.b.example.</code></td><td><code>b.example.</code> と右側のラベルが一致し、短い <code>b.example.</code> の後になります。</td></tr>
-            <tr><td>5</td><td><code>z.example.</code></td><td><code>b</code> より <code>z</code> が後です。</td></tr>
+            <tr><td>3</td><td><code>ba.example.</code></td><td><code>a.example.</code> と右端のラベル <code>example</code> は同じです。次に左側のラベルを比べると、<code>a</code> より <code>b</code> が後になります。</td></tr>
+            <tr><td>4</td><td><code>b.example.</code></td><td><code>ba.example.</code> と左側のラベルの先頭が <code>b</code> で共通し、短いラベル <code>b</code> が先になります。</td></tr>
+            <tr><td>5</td><td><code>a.b.example.</code></td><td><code>b.example.</code> と右側のラベルが一致し、短い <code>b.example.</code> の後になります。</td></tr>
+            <tr><td>6</td><td><code>z.example.</code></td><td>左側のラベル <code>z</code> は <code>b</code> より後です。</td></tr>
         </tbody>
     </table>
     <p>
