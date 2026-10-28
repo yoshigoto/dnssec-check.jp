@@ -122,6 +122,7 @@
             <li><a href="#ecdsap256sha256">ECDSAP256SHA256</a></li>
             <li><a href="#ed25519">ED25519</a></li>
             <li><a href="#ed448">ED448</a></li>
+            <li><a href="#mldsa44">ML-DSA-44</a></li>
             <li><a href="#a-record">Aレコード署名検証</a></li>
             <li><a href="#nsec">NSEC</a></li>
             <li><a href="#nsec3">NSEC3</a></li>
@@ -308,6 +309,51 @@
         </tbody>
     </table>
 
+    <h3 id="mldsa44">ML-DSA-44</h3>
+    <table>
+        <thead>
+            <tr><th>期待される総合判定</th><th>パターン</th><th>信頼の連鎖の確認 (+不在証明の検証)</th><th>www名に対する総合検証</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge ok">成功</span></td>
+                <td>DNSSEC総合検証成功</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=success.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">success.mldsa44.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.success.mldsa44.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>親DSのKey Tagと子DNSKEYのKey Tagが不一致</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">keytag.ds.error.mldsa44.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.keytag.ds.error.mldsa44.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>親DSのDigestと子DNSKEYから計算したDigestが不一致</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">hash.ds.error.mldsa44.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.hash.ds.error.mldsa44.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>親ゾーンのDS RRset署名（RRSIG）破損</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">sign.ds.error.mldsa44.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.sign.ds.error.mldsa44.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>DNSKEY RRset署名（RRSIG）破損</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">sign.dnskey.error.mldsa44.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.sign.dnskey.error.mldsa44.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>DNSKEY RRsetのRRSIG期限切れ</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">expire.dnskey.error.mldsa44.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">www.expire.dnskey.error.mldsa44.dnssec-check.jp</span></td>
+            </tr>
+        </tbody>
+    </table>
+
     <h3 id="a-record">Aレコード署名検証</h3>
     <p><code>corrupted.sign.a.error.&lt;アルゴリズム&gt;</code> は、対象名の A RRset を覆うRRSIGの署名値を破損したケースです。信頼の連鎖やDNSKEY署名ではなく、Aレコード自体の署名検証を確認します。</p>
     <table>
@@ -338,6 +384,12 @@
                 <td>ED448</td>
                 <td>A RRset署名（RRSIG）破損</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">corrupted.sign.a.error.ed448.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>ML-DSA-44</td>
+                <td>A RRset署名（RRSIG）破損</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">corrupted.sign.a.error.mldsa44.dnssec-check.jp</span></td>
             </tr>
         </tbody>
     </table>

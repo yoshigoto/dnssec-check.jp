@@ -6,12 +6,13 @@ from urllib.parse import parse_qs, urlparse
 
 
 INDEX_FILE = Path(__file__).with_name("index.html")
-ALGORITHMS = (
-    "rsasha256",
-    "ecdsap256sha256",
-    "ed25519",
-    "ed448",
-)
+ALGORITHMS = {
+    "rsasha256": "RSASHA256",
+    "ecdsap256sha256": "ECDSAP256SHA256",
+    "ed25519": "ED25519",
+    "ed448": "ED448",
+    "mldsa44": "ML-DSA-44",
+}
 EXPECTED_PATTERNS = (
     "success",
     "keytag.ds.error",
@@ -106,13 +107,12 @@ class DomainNamingTest(unittest.TestCase):
         self.assertEqual(linked_domains, displayed_domains, cell["text"])
 
     def test_algorithm_tables_have_consistent_domain_patterns(self):
-        self.assertGreaterEqual(len(self.tables), 4)
         algorithm_tables = [
-            table for table in self.tables if table["heading"].lower() in ALGORITHMS
+            table for table in self.tables if table["heading"] in ALGORITHMS.values()
         ]
         self.assertEqual(len(algorithm_tables), len(ALGORITHMS))
         for table, algorithm in zip(algorithm_tables, ALGORITHMS):
-            self.assertEqual(table["heading"].lower(), algorithm)
+            self.assertEqual(table["heading"], ALGORITHMS[algorithm])
             self.assertEqual(len(table["rows"]), len(EXPECTED_PATTERNS))
             for row, pattern in zip(table["rows"], EXPECTED_PATTERNS):
                 self.assertEqual(len(row), 4)
@@ -130,11 +130,19 @@ class DomainNamingTest(unittest.TestCase):
         self.assertEqual(len(table["rows"]), len(ALGORITHMS))
         for row, algorithm in zip(table["rows"], ALGORITHMS):
             self.assertEqual(len(row), 4)
-            self.assertEqual(row[1]["text"].lower(), algorithm)
+            self.assertEqual(row[1]["text"], ALGORITHMS[algorithm])
             self.assertEqual(row[2]["text"], "A RRset署名（RRSIG）破損")
             self.assert_link_domain_matches_display(row[3])
             expected_domain = f"corrupted.sign.a.error.{algorithm}.{BASE_DOMAIN}"
             self.assertEqual(domains_in_cell(row[3]), [expected_domain])
+
+    def test_algorithm_navigation_matches_heading_order(self):
+        html = INDEX_FILE.read_text(encoding="utf-8")
+        expected = list(ALGORITHMS.items())
+        headings = re.findall(r'<h3 id="([^"]+)">([^<]+)</h3>', html)
+        self.assertEqual(headings[:len(expected)], expected)
+        navigation = re.findall(r'<a href="#([^"]+)">([^<]+)</a>', html)
+        self.assertEqual(navigation[:len(expected)], expected)
 
     def test_nsec_tables_use_consistent_names_and_links(self):
         nsec_tables = [table for table in self.tables if table["heading"] in ("NSEC", "NSEC3")]
