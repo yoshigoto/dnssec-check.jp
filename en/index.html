@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>DNSSEC Chain of Trust Test Page</title>
     <link rel="alternate" hreflang="ja" href="../index.html">
     <link rel="alternate" hreflang="en" href="./index.html">
@@ -22,8 +23,8 @@
             margin: 0 auto;
             padding: 1.5em;
         }
-        h2 { border-bottom: 2px solid var(--border-color); padding-bottom: 0.3em; }
-        h3 {
+        h1 { border-bottom: 2px solid var(--border-color); padding-bottom: 0.3em; }
+        h2 {
             margin-top: 2em;
             padding: 0.3em 0.6em;
             background: var(--header-bg);
@@ -62,11 +63,19 @@
         .badge.ok { color: var(--ok-color); background: var(--ok-bg); }
         .badge.ng { color: var(--ng-color); background: var(--ng-bg); }
         footer { margin-top: 2em; padding-top: 0.8em; border-top: 1px solid var(--border-color); color: #57606a; font-size: 0.9em; }
+        @media (max-width: 640px) {
+            body { padding: 1em; }
+            nav.toc ul { columns: 1; }
+            table { display: block; max-width: 100%; overflow-x: auto; font-size: 0.8em; }
+            th, td { padding: 0.35em; }
+            td.domain { overflow-wrap: anywhere; }
+        }
     </style>
 </head>
 <body>
     <nav aria-label="Language selection"><a href="../index.html" lang="ja" hreflang="ja">日本語</a> | <span lang="en" aria-current="page">English</span></nav>
-    <h2>DNSSEC Chain of Trust Test Page</h2>
+    <main>
+    <h1>DNSSEC Chain of Trust Test Page</h1>
     <p>
         This page provides test cases for validating the DNSSEC chain of trust.<br>
         Click "Open validator" to open the <a href="https://www.on-link.jp/dnssec-validator/" target="_blank" rel="noopener">DNSSEC Delegation Validator</a>.<br>
@@ -118,7 +127,7 @@
         </tbody>
     </table>
 
-    <nav class="toc">
+    <nav class="toc" aria-label="Table of contents">
         Contents
         <ul>
             <li><a href="#rsasha256">RSASHA256</a></li>
@@ -132,7 +141,7 @@
         </ul>
     </nav>
 
-    <h3 id="rsasha256">RSASHA256</h3>
+    <h2 id="rsasha256">RSASHA256</h2>
     <table>
         <thead>
             <tr><th>Expected overall result</th><th>Test case</th><th>Chain of trust (+ denial-of-existence validation)</th><th>Full validation of the www name</th></tr>
@@ -177,7 +186,7 @@
         </tbody>
     </table>
 
-    <h3 id="ecdsap256sha256">ECDSAP256SHA256</h3>
+    <h2 id="ecdsap256sha256">ECDSAP256SHA256</h2>
     <table>
         <thead>
             <tr><th>Expected overall result</th><th>Test case</th><th>Chain of trust (+ denial-of-existence validation)</th><th>Full validation of the www name</th></tr>
@@ -222,7 +231,7 @@
         </tbody>
     </table>
 
-    <h3 id="ed25519">ED25519</h3>
+    <h2 id="ed25519">ED25519</h2>
     <table>
         <thead>
             <tr><th>Expected overall result</th><th>Test case</th><th>Chain of trust (+ denial-of-existence validation)</th><th>Full validation of the www name</th></tr>
@@ -267,7 +276,7 @@
         </tbody>
     </table>
 
-    <h3 id="ed448">ED448</h3>
+    <h2 id="ed448">ED448</h2>
     <table>
         <thead>
             <tr><th>Expected overall result</th><th>Test case</th><th>Chain of trust (+ denial-of-existence validation)</th><th>Full validation of the www name</th></tr>
@@ -312,7 +321,7 @@
         </tbody>
     </table>
 
-    <h3 id="mldsa44">ML-DSA-44</h3>
+    <h2 id="mldsa44">ML-DSA-44</h2>
     <table>
         <thead>
             <tr><th>Expected overall result</th><th>Test case</th><th>Chain of trust (+ denial-of-existence validation)</th><th>Full validation of the www name</th></tr>
@@ -357,7 +366,7 @@
         </tbody>
     </table>
 
-    <h3 id="a-record">A-record signature validation</h3>
+    <h2 id="a-record">A-record signature validation</h2>
     <p><code>corrupted.sign.a.error.&lt;Algorithm&gt;</code> has a corrupted signature value in the RRSIG covering the target name's A RRset. This tests the A-record signature itself rather than the chain of trust or the DNSKEY signature.</p>
     <table>
         <thead>
@@ -399,7 +408,7 @@
 
     <p>The following NSEC and NSEC3 test cases use RSASHA256 domains.</p>
 
-    <h3 id="nsec">NSEC</h3>
+    <h2 id="nsec">NSEC</h2>
     <table>
         <thead>
             <tr><th>Expected overall result</th><th>Test case</th><th>Test domain name</th></tr>
@@ -428,7 +437,7 @@
         </tbody>
     </table>
 
-    <h3 id="nsec3">NSEC3</h3>
+    <h2 id="nsec3">NSEC3</h2>
     <table>
         <thead>
             <tr><th>Expected overall result</th><th>Test case</th><th>Test domain name</th></tr>
@@ -507,6 +516,7 @@
         </tbody>
     </table>
 
+    </main>
     <footer>
         <p>&copy; 2026 <a href="https://x.com/goto_ipv6">Y.Goto</a>. This site and the listed domains are provided for DNSSEC validation testing.</p>
     </footer>

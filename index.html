@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>DNSSEC信頼の連鎖確認ページ</title>
     <link rel="alternate" hreflang="ja" href="./index.html">
     <link rel="alternate" hreflang="en" href="./en/index.html">
@@ -22,8 +23,8 @@
             margin: 0 auto;
             padding: 1.5em;
         }
-        h2 { border-bottom: 2px solid var(--border-color); padding-bottom: 0.3em; }
-        h3 {
+        h1 { border-bottom: 2px solid var(--border-color); padding-bottom: 0.3em; }
+        h2 {
             margin-top: 2em;
             padding: 0.3em 0.6em;
             background: var(--header-bg);
@@ -62,11 +63,19 @@
         .badge.ok { color: var(--ok-color); background: var(--ok-bg); }
         .badge.ng { color: var(--ng-color); background: var(--ng-bg); }
         footer { margin-top: 2em; padding-top: 0.8em; border-top: 1px solid var(--border-color); color: #57606a; font-size: 0.9em; }
+        @media (max-width: 640px) {
+            body { padding: 1em; }
+            nav.toc ul { columns: 1; }
+            table { display: block; max-width: 100%; overflow-x: auto; font-size: 0.8em; }
+            th, td { padding: 0.35em; }
+            td.domain { overflow-wrap: anywhere; }
+        }
     </style>
 </head>
 <body>
     <nav aria-label="言語切り替え"><span lang="ja" aria-current="page">日本語</span> | <a href="./en/index.html" lang="en" hreflang="en">English</a></nav>
-    <h2>DNSSEC信頼の連鎖確認ページ</h2>
+    <main>
+    <h1>DNSSEC信頼の連鎖確認ページ</h1>
     <p>
         DNSSECの信頼の連鎖を確認するためのテストページです。<br>
         「検証ツールへ」をクリックすると、「<a href="https://www.on-link.jp/dnssec-validator/" target="_blank" rel="noopener">DNSSEC委任状態検証ツール</a>」の画面に遷移します。<br>
@@ -118,7 +127,7 @@
         </tbody>
     </table>
 
-    <nav class="toc">
+    <nav class="toc" aria-label="目次">
         目次
         <ul>
             <li><a href="#rsasha256">RSASHA256</a></li>
@@ -132,7 +141,7 @@
         </ul>
     </nav>
 
-    <h3 id="rsasha256">RSASHA256</h3>
+    <h2 id="rsasha256">RSASHA256</h2>
     <table>
         <thead>
             <tr><th>期待される総合判定</th><th>パターン</th><th>信頼の連鎖の確認 (+不在証明の検証)</th><th>www名に対する総合検証</th></tr>
@@ -177,7 +186,7 @@
         </tbody>
     </table>
 
-    <h3 id="ecdsap256sha256">ECDSAP256SHA256</h3>
+    <h2 id="ecdsap256sha256">ECDSAP256SHA256</h2>
     <table>
         <thead>
             <tr><th>期待される総合判定</th><th>パターン</th><th>信頼の連鎖の確認 (+不在証明の検証)</th><th>www名に対する総合検証</th></tr>
@@ -222,7 +231,7 @@
         </tbody>
     </table>
 
-    <h3 id="ed25519">ED25519</h3>
+    <h2 id="ed25519">ED25519</h2>
     <table>
         <thead>
             <tr><th>期待される総合判定</th><th>パターン</th><th>信頼の連鎖の確認 (+不在証明の検証)</th><th>www名に対する総合検証</th></tr>
@@ -267,7 +276,7 @@
         </tbody>
     </table>
 
-    <h3 id="ed448">ED448</h3>
+    <h2 id="ed448">ED448</h2>
     <table>
         <thead>
             <tr><th>期待される総合判定</th><th>パターン</th><th>信頼の連鎖の確認 (+不在証明の検証)</th><th>www名に対する総合検証</th></tr>
@@ -312,7 +321,7 @@
         </tbody>
     </table>
 
-    <h3 id="mldsa44">ML-DSA-44</h3>
+    <h2 id="mldsa44">ML-DSA-44</h2>
     <table>
         <thead>
             <tr><th>期待される総合判定</th><th>パターン</th><th>信頼の連鎖の確認 (+不在証明の検証)</th><th>www名に対する総合検証</th></tr>
@@ -357,7 +366,7 @@
         </tbody>
     </table>
 
-    <h3 id="a-record">Aレコード署名検証</h3>
+    <h2 id="a-record">Aレコード署名検証</h2>
     <p><code>corrupted.sign.a.error.&lt;アルゴリズム&gt;</code> は、対象名の A RRset を覆うRRSIGの署名値を破損したケースです。信頼の連鎖やDNSKEY署名ではなく、Aレコード自体の署名検証を確認します。</p>
     <table>
         <thead>
@@ -399,7 +408,7 @@
 
     <p>以下では NSEC と NSEC3 について確認することができます。これらは RSASHA256 のドメインで確認します。</p>
 
-    <h3 id="nsec">NSEC</h3>
+    <h2 id="nsec">NSEC</h2>
     <table>
         <thead>
             <tr><th>期待される総合判定</th><th>パターン</th><th>検証用ドメイン名</th></tr>
@@ -428,7 +437,7 @@
         </tbody>
     </table>
 
-    <h3 id="nsec3">NSEC3</h3>
+    <h2 id="nsec3">NSEC3</h2>
     <table>
         <thead>
             <tr><th>期待される総合判定</th><th>パターン</th><th>検証用ドメイン名</th></tr>
@@ -507,6 +516,7 @@
         </tbody>
     </table>
 
+    </main>
     <footer>
         <p>&copy; 2026 <a href="https://x.com/goto_ipv6">Y.Goto</a>. 本サイトおよび掲載ドメインは、DNSSECの検証を目的として提供されています。</p>
     </footer>

@@ -40,7 +40,7 @@ class TableParser(HTMLParser):
         attributes = dict(attrs)
         if tag == "table":
             self.tables.append({"heading": self.heading, "rows": []})
-        elif tag == "h3":
+        elif tag == "h2":
             self.heading = ""
             self.in_heading = True
         elif tag == "tbody":
@@ -64,7 +64,7 @@ class TableParser(HTMLParser):
             self.current_cell += data
 
     def handle_endtag(self, tag):
-        if tag == "h3":
+        if tag == "h2":
             self.in_heading = False
         elif tag == "td" and self.current_cell is not None:
             self.current_row.append(
@@ -141,7 +141,7 @@ class DomainNamingTest(unittest.TestCase):
     def test_algorithm_navigation_matches_heading_order(self):
         html = INDEX_FILE.read_text(encoding="utf-8")
         expected = list(ALGORITHMS.items())
-        headings = re.findall(r'<h3 id="([^"]+)">([^<]+)</h3>', html)
+        headings = re.findall(r'<h2 id="([^"]+)">([^<]+)</h2>', html)
         self.assertEqual(headings[:len(expected)], expected)
         navigation = re.findall(r'<a href="#([^"]+)">([^<]+)</a>', html)
         self.assertEqual(navigation[:len(expected)], expected)

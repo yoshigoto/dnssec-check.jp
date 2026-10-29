@@ -43,6 +43,34 @@ class LocalizationTest(unittest.TestCase):
         self.assertTrue(japanese_pages)
         self.assertEqual(japanese_pages, english_pages)
 
+    def test_pages_have_responsive_semantic_structure(self):
+        for directory in (ROOT, ROOT / "en"):
+            for name in PAGE_NAMES:
+                path = directory / name
+                page = PageParser(path)
+                tags = [tag for tag, _ in page.elements]
+                headings = [
+                    int(tag[1]) for tag in tags
+                    if tag in ("h1", "h2", "h3", "h4", "h5", "h6")
+                ]
+                with self.subTest(path=path):
+                    self.assertEqual(headings.count(1), 1)
+                    self.assertTrue(headings)
+                    self.assertTrue(
+                        all(
+                            current <= previous + 1
+                            for previous, current in zip(headings, headings[1:])
+                        )
+                    )
+                    self.assertEqual(tags.count("main"), 1)
+                    self.assertTrue(
+                        any(
+                            tag == "meta"
+                            and attrs.get("name") == "viewport"
+                            for tag, attrs in page.elements
+                        )
+                    )
+
     def test_language_metadata_and_switches(self):
         for name in PAGE_NAMES:
             versions = {"ja": ROOT / name, "en": ROOT / "en" / name}
