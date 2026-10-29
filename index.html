@@ -416,16 +416,6 @@
         <tbody>
             <tr>
                 <td><span class="badge ng">失敗</span></td>
-                <td>NXDOMAINの不在証明のカバー不成立 (不在名を覆うNSECの Next Domain Name をその不在名に変更。範囲の終端は含まれないためカバーが成立しない)</td>
-                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
-            </tr>
-            <tr>
-                <td><span class="badge ng">失敗</span></td>
-                <td>NODATA不在証明の不整合 (AAAAだけを持つ名前へのA問い合わせ。実際の応答はNODATAだが、NSECの型ビットマップに存在しない A を追加)</td>
-                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mismatch.nsec.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">target.type.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
-            </tr>
-            <tr>
-                <td><span class="badge ng">失敗</span></td>
                 <td>NODATA不在証明の不整合 (AAAAだけを持つ名前へのMX問い合わせ。実際の応答はNODATAだが、NSECの型ビットマップに存在しない MX を追加)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mx.mismatch.nsec.rsasha256.dnssec-check.jp&recordType=MX" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">target.type.mx.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
             </tr>
@@ -433,6 +423,16 @@
                 <td><span class="badge ng">失敗</span></td>
                 <td>NODATA不在証明の不整合 (AAAAだけを持つ名前へのTXT問い合わせ。実際の応答はNODATAだが、NSECの型ビットマップに存在しない TXT を追加)</td>
                 <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.txt.mismatch.nsec.rsasha256.dnssec-check.jp&recordType=TXT" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">target.type.txt.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>NXDOMAINの不在証明のカバー不成立 (不在名を覆うNSECの Next Domain Name をその不在名に変更。範囲の終端は含まれないためカバーが成立しない)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">失敗</span></td>
+                <td>NODATA不在証明の不整合 (AAAAだけを持つ名前へのA問い合わせ。実際の応答はNODATAだが、NSECの型ビットマップに存在しない A を追加)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mismatch.nsec.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">検証ツールへ</a><br><span class="domain">target.type.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
             </tr>
         </tbody>
     </table>
