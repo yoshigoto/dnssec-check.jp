@@ -8,7 +8,7 @@ from test_domains import TableParser, domains_in_cell
 
 
 ROOT = Path(__file__).parent
-PAGE_NAMES = ("index.html", "dnssec-negative-answers.html")
+PAGE_NAMES = tuple(sorted(path.name for path in ROOT.glob("*.html")))
 
 
 class PageParser(HTMLParser):
@@ -16,24 +16,73 @@ class PageParser(HTMLParser):
         super().__init__()
         self.elements = []
         self.text = []
+        self.title = ""
+        self.in_title = False
         self.feed(path.read_text(encoding="utf-8"))
         self.close()
 
     def handle_starttag(self, tag, attrs):
         self.elements.append((tag, dict(attrs)))
+        if tag == "title":
+            self.in_title = True
 
     def handle_data(self, data):
         self.text.append(data)
+        if self.in_title:
+            self.title += data
+
+    def handle_endtag(self, tag):
+        if tag == "title":
+            self.in_title = False
 
 
 class LocalizationTest(unittest.TestCase):
+    def test_japanese_and_english_page_sets_match(self):
+        japanese_pages = {path.name for path in ROOT.glob("*.html")}
+        english_pages = {path.name for path in (ROOT / "en").glob("*.html")}
+        self.assertTrue(japanese_pages)
+        self.assertEqual(japanese_pages, english_pages)
+
+    def test_pages_have_responsive_semantic_structure(self):
+        for directory in (ROOT, ROOT / "en"):
+            for name in PAGE_NAMES:
+                path = directory / name
+                page = PageParser(path)
+                tags = [tag for tag, _ in page.elements]
+                headings = [
+                    int(tag[1]) for tag in tags
+                    if tag in ("h1", "h2", "h3", "h4", "h5", "h6")
+                ]
+                with self.subTest(path=path):
+                    self.assertEqual(headings.count(1), 1)
+                    self.assertTrue(headings)
+                    self.assertTrue(
+                        all(
+                            current <= previous + 1
+                            for previous, current in zip(headings, headings[1:])
+                        )
+                    )
+                    self.assertEqual(tags.count("main"), 1)
+                    self.assertTrue(
+                        any(
+                            tag == "meta"
+                            and attrs.get("name") == "viewport"
+                            for tag, attrs in page.elements
+                        )
+                    )
+
     def test_language_metadata_and_switches(self):
         for name in PAGE_NAMES:
             versions = {"ja": ROOT / name, "en": ROOT / "en" / name}
             for language, path in versions.items():
                 with self.subTest(path=path):
                     page = PageParser(path)
-                    self.assertIn(("html", {"lang": language}), page.elements)
+                    html_elements = [
+                        attrs for tag, attrs in page.elements if tag == "html"
+                    ]
+                    self.assertEqual(len(html_elements), 1)
+                    self.assertEqual(html_elements[0].get("lang"), language)
+                    self.assertTrue(page.title.strip())
                     alternatives = [
                         attrs for tag, attrs in page.elements
                         if tag == "link" and attrs.get("rel") == "alternate"
