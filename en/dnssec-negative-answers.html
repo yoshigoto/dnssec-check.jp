@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Understanding DNSSEC Negative Responses - NSEC and NSEC3</title>
+    <link rel="alternate" hreflang="ja" href="../dnssec-negative-answers.html">
+    <link rel="alternate" hreflang="en" href="./dnssec-negative-answers.html">
+    <style>
+        :root {
+            --border-color: #d0d7de;
+            --header-bg: #f6f8fa;
+            --note-bg: #fff8c5;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.7;
+            color: #1f2328;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 1.5em;
+        }
+        h1, h2 { line-height: 1.35; }
+        h1 { border-bottom: 2px solid var(--border-color); padding-bottom: 0.4em; }
+        h2 {
+            margin-top: 2em;
+            padding: 0.3em 0.6em;
+            background: var(--header-bg);
+            border-left: 4px solid #57606a;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.6em 0.8em;
+            text-align: left;
+            vertical-align: top;
+        }
+        th { background: var(--header-bg); }
+        code, pre { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+        pre {
+            background: var(--header-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow-x: auto;
+            padding: 1em;
+            line-height: 1.5;
+        }
+        .note {
+            background: var(--note-bg);
+            border-radius: 6px;
+            padding: 0.8em 1em;
+        }
+        .back { margin-top: 2em; }
+        @media (max-width: 640px) {
+            body { padding: 1em; }
+            table { font-size: 0.9em; }
+            th, td { padding: 0.45em; }
+        }
+    </style>
+</head>
+<body>
+    <nav aria-label="Language selection"><a href="../dnssec-negative-answers.html" lang="ja" hreflang="ja">日本語</a> | <span lang="en" aria-current="page">English</span></nav>
+    <h1>Understanding DNSSEC Negative Responses<br>Intervals in NSEC and NSEC3</h1>
+    <p>
+        When a query asks for a nonexistent name, DNSSEC returns more than a statement that the name does not exist: it also provides evidence that can be validated.
+        To understand NSEC and NSEC3, which supply this evidence, it is important to distinguish the hierarchy of names from their ordering.
+    </p>
+    <p class="note">
+        <strong>Key points:</strong> The name hierarchy describes which names are below which other names, and determines the Closest Encloser and Next Closer Name.
+        Canonical ordering places names in a sequence and determines NSEC intervals. NSEC3 intervals instead use the ordering of hashes computed from names.
+        Hierarchical depth and ordering are separate dimensions.
+    </p>
+
+    <h2>1. What does a negative response prove?</h2>
+    <p>
+        The two main kinds of DNS negative responses are <code>NXDOMAIN</code>, meaning the name itself does not exist, and <code>NODATA</code>, meaning the name exists but has no records of the requested type.
+        Since signatures cover existing RRsets, DNSSEC does not sign an empty negative response itself. Instead, it signs NSEC/NSEC3 records that provide evidence of the existence or absence of names in the zone.
+    </p>
+    <ul>
+        <li><strong>NSEC:</strong> Orders actual domain names canonically. A link from one name to the next shows that there are no names between them.</li>
+        <li><strong>NSEC3:</strong> Hashes domain names and orders the hashes. A link from one hash to the next shows that there are no names represented by hashes between them.</li>
+    </ul>
+
+    <h2>2. The name hierarchy: adding labels</h2>
+    <p>
+        A domain name's hierarchy is followed from the rightmost label toward the left. The subdomain relationship can be shown as <code>gov.example.</code> &rarr; <code>b.gov.example.</code> &rarr; <code>a.b.gov.example.</code>.
+        Thus, <code>b.gov.example.</code> is immediately below <code>gov.example.</code>, and <code>a.b.gov.example.</code> is immediately below <code>b.gov.example.</code>. Adding a label on the left makes the name more specific.
+    </p>
+    <pre>example.
+└── gov.example.                 ← Existing name
+    └── b.gov.example.           ← Does not exist
+        └── a.b.gov.example.     ← Queried name (does not exist)</pre>
+    <p>
+        In this example, <code>gov.example.</code> is the deepest existing ancestor of the queried name: the <strong>Closest Encloser</strong>.
+        The name one level below it that is also an ancestor of the queried name, <code>b.gov.example.</code>, is the <strong>Next Closer Name</strong>.
+        The Next Closer Name adds one label to the Closest Encloser; its position is determined by the hierarchy leading toward the queried name.
+    </p>
+    <p>
+        Conceptually, find the Closest Encloser by removing the leftmost label from the queried name repeatedly until an existing name is first encountered.
+        This follows the name hierarchy: neither canonical ordering nor the relative values of hashes select the Closest Encloser.
+    </p>
+
+    <h2>3. Canonical ordering: arranging names in a sequence</h2>
+    <p>
+        DNS canonical ordering is a defined rule for comparing domain names. It is not about the direction in which text is read on a screen.
+        <strong>Compare names starting at the rightmost label (closest to the root), moving left if the labels match.</strong>
+        Within each label, compare characters (more precisely, octets) from left to right. Uppercase and lowercase letters are treated alike. If all compared labels match and one name ends, the name with fewer labels comes first.
+    </p>
+    <p>Assuming only the following names exist, their canonical ordering is:</p>
+    <table>
+        <thead>
+            <tr><th>Order</th><th>Domain name</th><th>How the comparison works</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>1</td><td><code>example.</code></td><td>There is no additional label beyond the common parent, so the shorter name comes first.</td></tr>
+            <tr><td>2</td><td><code>a.example.</code></td><td>Compare the label <code>a</code> to the left of <code>example</code>.</td></tr>
+            <tr><td>3</td><td><code>b.example.</code></td><td>Comparing the labels to the left of <code>example</code>, <code>b</code> comes after <code>a</code> in <code>a.example.</code>.</td></tr>
+            <tr><td>4</td><td><code>a.b.example.</code></td><td>The labels on the right, <code>b.example.</code>, match those of <code>b.example.</code>. That name ends here, so <code>b.example.</code>, with fewer labels, comes first.</td></tr>
+            <tr><td>5</td><td><code>ba.example.</code></td><td>Compare the label to the left of <code>example</code> with that of <code>b.example.</code>. The label <code>b</code> is a prefix of <code>ba</code>, so the shorter label <code>b</code> comes first.</td></tr>
+            <tr><td>6</td><td><code>z.example.</code></td><td>The label <code>z</code> on the left comes after <code>b</code>.</td></tr>
+        </tbody>
+    </table>
+    <p>
+        In this ordering, <code>b.example.</code> (two labels) comes before <code>a.b.example.</code> (three labels).
+        At the same time, <code>a.b.example.</code> is a child of <code>b.example.</code>.
+        Parent-child relationships in the hierarchy and relative positions in canonical ordering convey different information.
+    </p>
+
+    <h2>4. NSEC intervals use canonical ordering</h2>
+    <p>
+        An NSEC resource record contains an Owner Name, a Next Domain Name, and Type Bit Maps.
+        The Owner Name is the name at which the NSEC record resides and whose existence it demonstrates. The Next Domain Name is the next name in the zone in canonical order.
+        The last name links back to the first, forming a circular chain of names in the zone.
+    </p>
+    <table>
+        <thead>
+            <tr><th>Field</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Owner Name</td><td>The existing name to which this NSEC record belongs. The owner name itself demonstrates that the name exists.</td></tr>
+            <tr><td>Next Domain Name</td><td>The next existing name in canonical order after the Owner Name. It indicates that no other names in the zone lie between these two names. The interval excludes its endpoints.</td></tr>
+            <tr><td>Type Bit Maps</td><td>A bitmap listing the record types present at the Owner Name. The absence of the queried type is used as evidence for NODATA.</td></tr>
+        </tbody>
+    </table>
+    <p>The zone-file form is as follows (TTL and other details are omitted):</p>
+    <pre>owner.example.  IN  NSEC  next.example.  A NS SOA RRSIG NSEC DNSKEY</pre>
+    <p>Assume that only the names in the canonical-ordering table exist, with the following NSEC record:</p>
+    <pre>ba.example.  IN  NSEC  z.example.  A RRSIG NSEC</pre>
+    <p>
+        The Owner Name, <code>ba.example.</code>, exists, and no other registered name in the zone lies in the canonical-order interval before the next name, <code>z.example.</code>.
+        This provides evidence that a queried name inside that interval, such as <code>c.example.</code>, does not exist.
+        If the Type Bit Maps include <code>A</code>, the Owner Name has an A record. Otherwise, subject to the other required conditions, the bitmap can be used to prove NODATA for an A query.
+    </p>
+    <p>
+        For <code>NXDOMAIN</code>, proving only that the queried name does not exist is not enough. The wildcard name immediately below the Closest Encloser must also be shown not to exist, demonstrating that no response was synthesized from a wildcard.
+        NSEC therefore requires <strong>multiple proof components</strong>: evidence covering the queried name and evidence covering the wildcard name. If one NSEC record covers both names, that single record can supply both components.
+        For <code>NODATA</code> at an existing name, the main evidence is that name's NSEC record and its Type Bit Maps.
+    </p>
+
+    <h2>5. NSEC3 orders hashes instead of names</h2>
+    <p>
+        NSEC3 hashes names and builds a chain ordered by hash values represented in Base32hex.
+        Interval checks compare hashes computed with the same hash algorithm, salt, and iteration count, not the original domain names.
+        Hash ordering does not reveal the original names' label counts or parent-child relationships.
+    </p>
+    <p>
+        NSEC3 also has an Owner Name, a Next Hashed Owner Name, and Type Bit Maps. The leftmost label of the Owner Name is the Base32hex-encoded hash of the original name.
+        The Owner Name indicates that the name corresponding to this hash is represented in the NSEC3 chain. With Opt-Out, hashes of some delegations without DS records may be omitted, so not every name in the parent zone appears as an Owner Name.
+        The Next Hashed Owner Name is the hash of the next name represented in the NSEC3 chain, in canonical hash order.
+        The Type Bit Maps identify record types at the original name from which the Owner Name's hash was computed.
+    </p>
+    <table>
+        <thead>
+            <tr><th>Field</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Owner Name</td><td><code>&lt;Base32hex-hash&gt;.&lt;zone-name&gt;.</code>. The leftmost label is the hash of a name represented in the NSEC3 chain, demonstrating that the name exists. Delegations without DS records omitted by Opt-Out may not appear as Owner Names.</td></tr>
+            <tr><td>Next Hashed Owner Name</td><td>The hash of the next name represented in the NSEC3 chain, in canonical hash order. No other hash on the chain lies between the Owner Name's hash and this next hash (although delegations without DS records omitted by Opt-Out may lie in this interval). The endpoints are excluded.</td></tr>
+            <tr><td>Type Bit Maps</td><td>The record types at the original name whose hash appears in the Owner Name. The absence of the queried type is used as evidence for NODATA.</td></tr>
+        </tbody>
+    </table>
+    <p>The zone-file form is as follows (parameter details are omitted):</p>
+    <pre>&lt;Base32hex-hash&gt;.example.  IN  NSEC3  1 0 0 - &lt;next-hash&gt;  A RRSIG</pre>
+    <p class="note">
+        In addition to Type Bit Maps, an NSEC3 record contains a hash algorithm, flags, an iteration count, and a salt.
+        In this simplified example, <code>1 0 0 -</code> means SHA-1, no flags, zero iterations, and no salt, respectively.
+    </p>
+    <h3>Why Base32hex encoding preserves hash ordering</h3>
+    <p>
+        What is preserved is <strong>the order of the computed hash values, not the order of the original domain names</strong>.
+        NSEC3 uses Base32hex-encoded hashes in owner names. The Base32hex alphabet is ordered by increasing value:
+        <code>0</code> through <code>9</code>, then <code>A</code> through <code>V</code>.
+        NSEC3 owner names have the form <code>&lt;hash&gt;.&lt;zone-name&gt;.</code>, with a common zone-name suffix within a zone. After comparing that suffix in DNS canonical order, comparing the hash labels from left to right gives the same order as comparing the unencoded hashes as byte sequences.
+    </p>
+    <table>
+        <thead>
+            <tr><th>Base32hex characters</th><th>5-bit values</th><th>Example ordering</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>0</code> through <code>9</code></td><td>0 through 9</td><td><code>8</code> &lt; <code>9</code> &lt; <code>A</code></td></tr>
+            <tr><td><code>A</code> through <code>V</code></td><td>10 through 31</td><td><code>A</code> &lt; <code>B</code> &lt; ... &lt; <code>V</code></td></tr>
+        </tbody>
+    </table>
+    <p>
+        Base32hex maps the hash's bit sequence to characters in groups of five bits, starting at the beginning. At the first differing 5-bit group in two hashes, the corresponding characters have the same relative order as the group values.
+        An NSEC3 SHA-1 hash has 160 bits, producing exactly 32 Base32hex characters. For example, an initial group of <code>01001</code> becomes <code>9</code>, and <code>01010</code> becomes <code>A</code>. The fact that <code>9</code> precedes <code>A</code> matches the order of the original 5-bit values.
+    </p>
+    <p class="note">
+        Hashing itself does not preserve DNS canonical name ordering. Hashing loses the relationship to the original order, but the subsequent Base32hex representation preserves the order among hash values.
+        This is why the encoded hash in an NSEC3 owner name and the binary hash stored in Next Hashed Owner Name can be compared using the same ordering.
+    </p>
+    <pre>Determined from the name hierarchy:
+  Closest Encloser = gov.example.
+  Next Closer Name = b.gov.example.
+
+Checked using NSEC3 evidence:
+  gov.example.       → Verify that its hash exists
+  b.gov.example.     → Verify that its hash lies within an NSEC3 interval
+  *.gov.example.     → Verify that the wildcard name does not exist</pre>
+    <p class="note">
+        The following explanation using a matching Closest Encloser hash describes the basic case without Opt-Out. If Opt-Out omits that hash, use the closest ancestor whose existence can be proved with NSEC3, as explained in the next section.
+    </p>
+    <p>
+        In short, the Closest Encloser and Next Closer Name are determined from the <strong>name hierarchy</strong>.
+        NSEC3 then checks that the Closest Encloser's hash exists and that the Next Closer Name's hash is covered by an NSEC3 interval.
+        For NXDOMAIN, it also proves that the wildcard immediately below the Closest Encloser (<code>*.gov.example.</code> in this example) does not exist.
+        The Next Closer Name is not found by hash ordering or by counting labels in a hash.
+    </p>
+    <p>
+        An NSEC3 NXDOMAIN proof therefore does not necessarily fit in a single record. It usually combines evidence that the Closest Encloser's hash is present, evidence covering the Next Closer Name's hash, and evidence covering the wildcard name's hash.
+        These are <strong>multiple proof components</strong>; one NSEC3 record may serve multiple roles when its interval covers more than one required hash.
+        For NODATA, the main evidence is usually the Type Bit Maps of an NSEC3 record matching the target name's hash.
+    </p>
+
+    <h2>6. Opt-Out: omitting delegations without DS records from the hash chain</h2>
+    <p>
+        A delegation with NS records but no DS record in the parent zone exists in that parent zone, but has no chain of trust from the parent to the child zone's DNSKEY.
+        Even if the child publishes DNSKEY and RRSIG records, without a parent DS record its key cannot be authenticated through the parent's chain of trust. Validation therefore treats the child as "insecure", not "secure".
+        Here, "delegation without a DS record" refers to the absence of a DS record in the parent, regardless of whether the child zone is actually signed.
+        Ordinary NSEC3 includes the delegation name's hash in the chain. For large zones with many such delegations, <strong>Opt-Out</strong> allows those hashes to be omitted.
+    </p>
+    <p>
+        An omitted name's hash falls within an interval belonging to another name's NSEC3 record.
+        The Opt-Out flag on that record indicates that the interval may contain delegations without DS records that are not represented in the chain.
+        The flag belongs to the NSEC3 record covering the delegation name's hash, not to the delegation name itself.
+    </p>
+    <p>
+        If Opt-Out omits the actual Closest Encloser's hash from the chain, NSEC3 cannot directly prove that name's existence.
+        Instead of the actual Closest Encloser, use the closest ancestor whose existence NSEC3 can prove: the <strong>Closest Provable Encloser</strong>.
+        The Next Closer Name is then found by adding one label to the Closest Provable Encloser toward the queried name.
+        RFC 5155 defines that the Closest Encloser and Closest Provable Encloser may differ in an Opt-Out zone.
+    </p>
+    <pre>Parent-zone namespace and NSEC3 hash chain (schematic)
+
+Parent zone:
+  signed.example.       NS + DS   ← DS authenticates the child's DNSKEY; included in the hash chain
+  child.example.        NS, no DS ← The parent cannot authenticate the child's DNSKEY; may be omitted by Opt-Out
+
+Hash ordering:
+  ... H(signed.example.)
+       ───── Interval of an NSEC3 record with the Opt-Out flag ─────
+       (H(child.example.) may fall here without appearing in the chain)
+       → Next hash represented in the chain ...</pre>
+    <p>
+        The main fact this mechanism can validate is that a delegation has <strong>no DS record</strong>.
+        A resolver can use an Opt-Out NSEC3 record covering the queried name's hash as evidence for a DS query and treat the delegation as "insecure", meaning it is not protected by DNSSEC.
+        This is different from validating the child's DNSKEY or RRSIG and declaring it "secure": the proof of DS absence leads to an "insecure" validation state.
+    </p>
+    <p class="note">
+        An Opt-Out interval may contain not only hashes of unsigned delegations, but also hashes of non-delegation names or nonexistent names.
+        An Opt-Out interval alone therefore cannot prove that an arbitrary name does not exist (NXDOMAIN), or that every name in the interval must be an unsigned delegation.
+        A proof of DS absence differs from the proofs of absence for the Next Closer Name and wildcard required in an ordinary NXDOMAIN proof.
+    </p>
+    <p>
+        In the <code>unsigned.optout.mismatch</code> examples on this site, the <strong>Next Hashed Owner Name</strong> of the Opt-Out NSEC3 record covering the existing delegation <code>unsigned</code>, which has no DS record, is changed to the hash of that delegation name.
+        An NSEC3 record shows that the name corresponding to its Owner Name's hash exists, and Next Hashed Owner Name identifies the hash of the next name on the chain. Between them there are no hashes represented in the chain, except that Opt-Out may omit delegations.
+        Thus, the interval from the Owner Name to Next Hashed Owner Name consists of the values strictly between the endpoints, not the endpoint names themselves. The endpoints represent names on the chain and are distinct from nonexistent names inside the interval.
+        Here, setting the upper endpoint to the hash of <code>unsigned</code> makes that hash equal to the endpoint rather than inside the interval. The record can therefore no longer serve as evidence of DS absence for that delegation.
+        The broken component is the proof interval, not the NSEC3 signature itself: the modified record has been re-signed.
+    </p>
+
+    <h2>7. References</h2>
+    <ul>
+        <li><a href="https://blog.verisign.com/security/cryptographic-tools-for-non-existence-in-the-domain-name-system-nsec-and-nsec3/">Verisign: Cryptographic Tools for Non-Existence in the Domain Name System: NSEC and NSEC3</a> — An introduction with diagrams comparing NSEC name ordering and NSEC3 hashes. The explanation above supplements its treatment of the Closest Encloser and Next Closer Name.</li>
+        <li><a href="https://www.rfc-editor.org/rfc/rfc4034#section-6.1">RFC 4034, Section 6.1</a> — Specifies DNS canonical name ordering.</li>
+        <li><a href="https://www.rfc-editor.org/rfc/rfc4034#section-4">RFC 4034, Section 4</a> — Specifies NSEC records.</li>
+        <li><a href="https://www.rfc-editor.org/rfc/rfc4035#section-3.1.3.2">RFC 4035, Section 3.1.3.2</a> — Requirements for authenticated denial of existence using NSEC.</li>
+        <li><a href="https://www.rfc-editor.org/rfc/rfc4648#section-7">RFC 4648, Section 7</a> — Defines the mapping between Base32hex characters and 5-bit values.</li>
+        <li><a href="https://www.rfc-editor.org/rfc/rfc5155#section-5">RFC 5155, Section 5</a> — Defines the NSEC3 record format and hash values.</li>
+        <li><a href="https://www.rfc-editor.org/rfc/rfc5155#section-6">RFC 5155, Section 6</a> — Defines the NSEC3 Opt-Out flag and its meaning.</li>
+        <li><a href="https://www.rfc-editor.org/rfc/rfc5155#section-7.2.1">RFC 5155, Section 7.2.1</a> — NXDOMAIN proof procedures using NSEC3.</li>
+        <li><a href="https://www.rfc-editor.org/rfc/rfc5155#section-7.2.3">RFC 5155, Section 7.2.3</a> — Procedures for proving DS absence using NSEC3.</li>
+        <li><a href="https://dnsviz.net/">DNSViz</a> — Visualizes DNSSEC authentication paths and configurations for real domains. Best suited to examining actual examples rather than introducing the concepts.</li>
+        <li><a href="https://eng-blog.iij.ad.jp/archives/24512" hreflang="ja">IIJ Engineers Blog: Adding DNSSEC to a Full Resolver Implementation - Proving Negative Responses with NSEC/NSEC3 (Japanese)</a> — Explains NSEC/NSEC3 intervals, the Closest Encloser, and the Next Closer Name in Japanese.</li>
+        <li><a href="https://kazu-yamamoto.hatenablog.jp/entry/2026/08/05/094422" hreflang="ja">NSEC3 at the End of Sorrow (Japanese)</a> — Explains the differences between NSEC and NSEC3 and denial-of-existence proofs using NSEC3.</li>
+    </ul>
+    <p class="back"><a href="./index.html">Back to the DNSSEC Chain of Trust Test Page</a></p>
+</body>
+</html>

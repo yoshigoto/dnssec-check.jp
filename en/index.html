@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DNSSEC Chain of Trust Test Page</title>
+    <link rel="alternate" hreflang="ja" href="../index.html">
+    <link rel="alternate" hreflang="en" href="./index.html">
+    <style>
+        :root {
+            --ok-color: #1b7f3a;
+            --ok-bg: #e6f4ea;
+            --ng-color: #b3261e;
+            --ng-bg: #fce8e6;
+            --border-color: #d0d7de;
+            --header-bg: #f6f8fa;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6;
+            color: #1f2328;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5em;
+        }
+        h2 { border-bottom: 2px solid var(--border-color); padding-bottom: 0.3em; }
+        h3 {
+            margin-top: 2em;
+            padding: 0.3em 0.6em;
+            background: var(--header-bg);
+            border-left: 4px solid #57606a;
+        }
+        nav.toc {
+            background: var(--header-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.8em 1.2em;
+            margin: 1.2em 0;
+        }
+        nav.toc ul { columns: 2; margin: 0.3em 0 0; padding-left: 1.2em; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.2em;
+            font-size: 0.95em;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.5em 0.7em;
+            text-align: left;
+            vertical-align: top;
+        }
+        th { background: var(--header-bg); }
+        td.domain { font-family: monospace; font-size: 0.85em; color: #57606a; }
+        .badge {
+            display: inline-block;
+            padding: 0.15em 0.6em;
+            border-radius: 1em;
+            font-size: 0.85em;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .badge.ok { color: var(--ok-color); background: var(--ok-bg); }
+        .badge.ng { color: var(--ng-color); background: var(--ng-bg); }
+        footer { margin-top: 2em; padding-top: 0.8em; border-top: 1px solid var(--border-color); color: #57606a; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <nav aria-label="Language selection"><a href="../index.html" lang="ja" hreflang="ja">日本語</a> | <span lang="en" aria-current="page">English</span></nav>
+    <h2>DNSSEC Chain of Trust Test Page</h2>
+    <p>
+        This page provides test cases for validating the DNSSEC chain of trust.<br>
+        Click "Open validator" to open the <a href="https://www.on-link.jp/dnssec-validator/" target="_blank" rel="noopener">DNSSEC Delegation Validator</a>.<br>
+        In each table, "Chain of trust (+ denial-of-existence validation)" targets the zone apex (including NODATA proof validation if no A record exists there). "Full validation of the www name" targets the domain name prefixed with "www.". Domains for testing corrupted A-record signatures are listed in a separate table.
+    </p>
+    <p>For an explanation of negative responses using NSEC/NSEC3, see <a href="./dnssec-negative-answers.html">Understanding DNSSEC Negative Responses</a>.</p>
+    <p>
+        Note: "Expected overall result" indicates the final result expected from the validator or a similar tool.<br>
+        Note: Algorithm headings (RSASHA256, ED25519, etc.) refer to the signature algorithm used for the child zone's DNSKEY, A records, and other records, not the RRSIG algorithm used for the DS RRset in the parent zone (.jp).
+    </p>
+    <p>The main labels in the domain names identify the following test cases.</p>
+    <table>
+        <thead>
+            <tr><th>Domain name labels</th><th>Test description</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>success</code></td>
+                <td>A valid configuration in which DNSSEC validation succeeds.</td>
+            </tr>
+            <tr>
+                <td><code>keytag.ds.error</code><br><code>hash.ds.error</code></td>
+                <td>The parent zone's DS and the child zone's DNSKEY have a mismatched Key Tag or Digest, respectively.</td>
+            </tr>
+            <tr>
+                <td><code>sign.ds.error</code><br><code>sign.dnskey.error</code><br><code>expire.dnskey.error</code></td>
+                <td>A corrupted parent DS RRset signature, a corrupted child DNSKEY RRset signature, and an expired child DNSKEY RRset signature, respectively.</td>
+            </tr>
+            <tr>
+                <td><code>corrupted.sign.a.error</code></td>
+                <td>The signature (RRSIG) covering the A RRset is corrupted.</td>
+            </tr>
+            <tr>
+                <td><code>missing.cover.mismatch</code></td>
+                <td>The NSEC/NSEC3 interval does not cover the nonexistent name, so the denial-of-existence proof fails.</td>
+            </tr>
+            <tr>
+                <td><code>target.type.mismatch</code><br><code>target.type.mx.mismatch</code><br><code>target.type.txt.mismatch</code></td>
+                <td>The NSEC/NSEC3 type bitmap contradicts the actual response, making the NODATA proof inconsistent. <code>mx</code> / <code>txt</code> indicate the query type.</td>
+            </tr>
+            <tr>
+                <td><code>unsigned.optout.mismatch</code></td>
+                <td>The Opt-Out proof of DS absence fails for the unsigned delegation <code>unsigned</code>, which has no DS record.</td>
+            </tr>
+            <tr>
+                <td><code>iter0</code> / <code>iter1</code><br><code>nosalt</code> / <code>saltA1B2</code></td>
+                <td>The iteration count and salt used to compute NSEC3 hashes.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <nav class="toc">
+        Contents
+        <ul>
+            <li><a href="#rsasha256">RSASHA256</a></li>
+            <li><a href="#ecdsap256sha256">ECDSAP256SHA256</a></li>
+            <li><a href="#ed25519">ED25519</a></li>
+            <li><a href="#ed448">ED448</a></li>
+            <li><a href="#mldsa44">ML-DSA-44</a></li>
+            <li><a href="#a-record">A-record signature validation</a></li>
+            <li><a href="#nsec">NSEC</a></li>
+            <li><a href="#nsec3">NSEC3</a></li>
+        </ul>
+    </nav>
+
+    <h3 id="rsasha256">RSASHA256</h3>
+    <table>
+        <thead>
+            <tr><th>Expected overall result</th><th>Test case</th><th>Chain of trust (+ denial-of-existence validation)</th><th>Full validation of the www name</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge ok">Success</span></td>
+                <td>Full DNSSEC validation succeeds</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=success.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">success.rsasha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.success.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Parent DS Key Tag does not match the child DNSKEY Key Tag</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">keytag.ds.error.rsasha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.keytag.ds.error.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Parent DS Digest does not match the digest computed from the child DNSKEY</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">hash.ds.error.rsasha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.hash.ds.error.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Corrupted parent-zone DS RRset signature (RRSIG)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">sign.ds.error.rsasha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.sign.ds.error.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Corrupted DNSKEY RRset signature (RRSIG)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">sign.dnskey.error.rsasha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.sign.dnskey.error.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Expired DNSKEY RRset RRSIG</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">expire.dnskey.error.rsasha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.expire.dnskey.error.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 id="ecdsap256sha256">ECDSAP256SHA256</h3>
+    <table>
+        <thead>
+            <tr><th>Expected overall result</th><th>Test case</th><th>Chain of trust (+ denial-of-existence validation)</th><th>Full validation of the www name</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge ok">Success</span></td>
+                <td>Full DNSSEC validation succeeds</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=success.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">success.ecdsap256sha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.success.ecdsap256sha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Parent DS Key Tag does not match the child DNSKEY Key Tag</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">keytag.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.keytag.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Parent DS Digest does not match the digest computed from the child DNSKEY</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">hash.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.hash.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Corrupted parent-zone DS RRset signature (RRSIG)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">sign.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.sign.ds.error.ecdsap256sha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Corrupted DNSKEY RRset signature (RRSIG)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">sign.dnskey.error.ecdsap256sha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.sign.dnskey.error.ecdsap256sha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Expired DNSKEY RRset RRSIG</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">expire.dnskey.error.ecdsap256sha256.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.expire.dnskey.error.ecdsap256sha256.dnssec-check.jp</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 id="ed25519">ED25519</h3>
+    <table>
+        <thead>
+            <tr><th>Expected overall result</th><th>Test case</th><th>Chain of trust (+ denial-of-existence validation)</th><th>Full validation of the www name</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge ok">Success</span></td>
+                <td>Full DNSSEC validation succeeds</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=success.ed25519.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">success.ed25519.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.ed25519.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.success.ed25519.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Parent DS Key Tag does not match the child DNSKEY Key Tag</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">keytag.ds.error.ed25519.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.keytag.ds.error.ed25519.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Parent DS Digest does not match the digest computed from the child DNSKEY</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">hash.ds.error.ed25519.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.hash.ds.error.ed25519.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Corrupted parent-zone DS RRset signature (RRSIG)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">sign.ds.error.ed25519.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.sign.ds.error.ed25519.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Corrupted DNSKEY RRset signature (RRSIG)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">sign.dnskey.error.ed25519.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.sign.dnskey.error.ed25519.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Expired DNSKEY RRset RRSIG</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">expire.dnskey.error.ed25519.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.expire.dnskey.error.ed25519.dnssec-check.jp</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 id="ed448">ED448</h3>
+    <table>
+        <thead>
+            <tr><th>Expected overall result</th><th>Test case</th><th>Chain of trust (+ denial-of-existence validation)</th><th>Full validation of the www name</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge ok">Success</span></td>
+                <td>Full DNSSEC validation succeeds</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=success.ed448.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">success.ed448.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.ed448.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.success.ed448.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Parent DS Key Tag does not match the child DNSKEY Key Tag</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">keytag.ds.error.ed448.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.keytag.ds.error.ed448.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Parent DS Digest does not match the digest computed from the child DNSKEY</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">hash.ds.error.ed448.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.hash.ds.error.ed448.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Corrupted parent-zone DS RRset signature (RRSIG)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">sign.ds.error.ed448.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.sign.ds.error.ed448.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Corrupted DNSKEY RRset signature (RRSIG)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">sign.dnskey.error.ed448.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.sign.dnskey.error.ed448.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Expired DNSKEY RRset RRSIG</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">expire.dnskey.error.ed448.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.expire.dnskey.error.ed448.dnssec-check.jp</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 id="mldsa44">ML-DSA-44</h3>
+    <table>
+        <thead>
+            <tr><th>Expected overall result</th><th>Test case</th><th>Chain of trust (+ denial-of-existence validation)</th><th>Full validation of the www name</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge ok">Success</span></td>
+                <td>Full DNSSEC validation succeeds</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=success.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">success.mldsa44.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.success.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.success.mldsa44.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Parent DS Key Tag does not match the child DNSKEY Key Tag</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=keytag.ds.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">keytag.ds.error.mldsa44.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.keytag.ds.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.keytag.ds.error.mldsa44.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Parent DS Digest does not match the digest computed from the child DNSKEY</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=hash.ds.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">hash.ds.error.mldsa44.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.hash.ds.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.hash.ds.error.mldsa44.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Corrupted parent-zone DS RRset signature (RRSIG)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.ds.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">sign.ds.error.mldsa44.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.ds.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.sign.ds.error.mldsa44.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Corrupted DNSKEY RRset signature (RRSIG)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=sign.dnskey.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">sign.dnskey.error.mldsa44.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.sign.dnskey.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.sign.dnskey.error.mldsa44.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Expired DNSKEY RRset RRSIG</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=expire.dnskey.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">expire.dnskey.error.mldsa44.dnssec-check.jp</span></td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=www.expire.dnskey.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">www.expire.dnskey.error.mldsa44.dnssec-check.jp</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 id="a-record">A-record signature validation</h3>
+    <p><code>corrupted.sign.a.error.&lt;Algorithm&gt;</code> has a corrupted signature value in the RRSIG covering the target name's A RRset. This tests the A-record signature itself rather than the chain of trust or the DNSKEY signature.</p>
+    <table>
+        <thead>
+            <tr><th>Expected overall result</th><th>Algorithm</th><th>Test case</th><th>Test domain name</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>RSASHA256</td>
+                <td>Corrupted A RRset signature (RRSIG)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">corrupted.sign.a.error.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>ECDSAP256SHA256</td>
+                <td>Corrupted A RRset signature (RRSIG)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.ecdsap256sha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">corrupted.sign.a.error.ecdsap256sha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>ED25519</td>
+                <td>Corrupted A RRset signature (RRSIG)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.ed25519.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">corrupted.sign.a.error.ed25519.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>ED448</td>
+                <td>Corrupted A RRset signature (RRSIG)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.ed448.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">corrupted.sign.a.error.ed448.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>ML-DSA-44</td>
+                <td>Corrupted A RRset signature (RRSIG)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=corrupted.sign.a.error.mldsa44.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">corrupted.sign.a.error.mldsa44.dnssec-check.jp</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>The following NSEC and NSEC3 test cases use RSASHA256 domains.</p>
+
+    <h3 id="nsec">NSEC</h3>
+    <table>
+        <thead>
+            <tr><th>Expected overall result</th><th>Test case</th><th>Test domain name</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Invalid NXDOMAIN proof coverage (the covering NSEC's Next Domain Name is changed to the nonexistent name; the endpoint is excluded, so coverage fails)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">missing.cover.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Inconsistent NODATA proof (For a name with only an AAAA record, an A query returns NODATA, but the NSEC type bitmap incorrectly includes A)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mismatch.nsec.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">target.type.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Inconsistent NODATA proof (For a name with only an AAAA record, an MX query returns NODATA, but the NSEC type bitmap incorrectly includes MX)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mx.mismatch.nsec.rsasha256.dnssec-check.jp&recordType=MX" target="_blank" rel="noopener">Open validator</a><br><span class="domain">target.type.mx.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Inconsistent NODATA proof (For a name with only an AAAA record, a TXT query returns NODATA, but the NSEC type bitmap incorrectly includes TXT)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.txt.mismatch.nsec.rsasha256.dnssec-check.jp&recordType=TXT" target="_blank" rel="noopener">Open validator</a><br><span class="domain">target.type.txt.mismatch.nsec.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 id="nsec3">NSEC3</h3>
+    <table>
+        <thead>
+            <tr><th>Expected overall result</th><th>Test case</th><th>Test domain name</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Inconsistent NODATA proof (For a name with only an AAAA record, an MX query returns NODATA, but the NSEC3 type bitmap incorrectly includes MX)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mx.mismatch.nsec3.rsasha256.dnssec-check.jp&recordType=MX" target="_blank" rel="noopener">Open validator</a><br><span class="domain">target.type.mx.mismatch.nsec3.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Inconsistent NODATA proof (For a name with only an AAAA record, a TXT query returns NODATA, but the NSEC3 type bitmap incorrectly includes TXT)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.txt.mismatch.nsec3.rsasha256.dnssec-check.jp&recordType=TXT" target="_blank" rel="noopener">Open validator</a><br><span class="domain">target.type.txt.mismatch.nsec3.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Invalid NSEC3 NXDOMAIN proof coverage (0 iterations, no salt. Next Hashed Owner Name is set to the nonexistent name's hash; the endpoint is excluded, so coverage fails)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec3.iter0.nosalt.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">missing.cover.mismatch.nsec3.iter0.nosalt.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Inconsistent NODATA proof (0 iterations, no salt. For a name with only an AAAA record, an A query is made, and the NSEC3 type bitmap incorrectly includes A)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mismatch.nsec3.iter0.nosalt.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">target.type.mismatch.nsec3.iter0.nosalt.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Invalid Opt-Out proof coverage for DS absence (0 iterations, no salt. The hash of the unsigned delegation <code>unsigned</code> is set as the next hash, making it an excluded endpoint. The signature itself remains valid)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=unsigned.optout.mismatch.nsec3.iter0.nosalt.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">unsigned.optout.mismatch.nsec3.iter0.nosalt.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Invalid NSEC3 NXDOMAIN proof coverage (0 iterations, salt A1B2. Next Hashed Owner Name is set to the nonexistent name's hash, which is excluded as the interval endpoint)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec3.iter0.saltA1B2.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">missing.cover.mismatch.nsec3.iter0.saltA1B2.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Inconsistent NODATA proof (0 iterations, salt A1B2. For a name with only an AAAA record, an A query is made, and the type bitmap incorrectly includes A)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mismatch.nsec3.iter0.saltA1B2.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">target.type.mismatch.nsec3.iter0.saltA1B2.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Invalid Opt-Out proof coverage for DS absence (0 iterations, salt A1B2. The hash of the unsigned delegation <code>unsigned</code> is set as the next hash, making it an excluded endpoint. The signature itself remains valid)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=unsigned.optout.mismatch.nsec3.iter0.saltA1B2.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">unsigned.optout.mismatch.nsec3.iter0.saltA1B2.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Invalid NSEC3 NXDOMAIN proof coverage (1 iteration, no salt. Next Hashed Owner Name is set to the nonexistent name's hash, which is excluded as the interval endpoint)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec3.iter1.nosalt.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">missing.cover.mismatch.nsec3.iter1.nosalt.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Inconsistent NODATA proof (1 iteration, no salt. For a name with only an AAAA record, an A query is made, and the type bitmap incorrectly includes A)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mismatch.nsec3.iter1.nosalt.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">target.type.mismatch.nsec3.iter1.nosalt.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Invalid Opt-Out proof coverage for DS absence (1 iteration, no salt. The hash of the unsigned delegation <code>unsigned</code> is set as the next hash, making it an excluded endpoint. The signature itself remains valid)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=unsigned.optout.mismatch.nsec3.iter1.nosalt.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">unsigned.optout.mismatch.nsec3.iter1.nosalt.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Invalid NSEC3 NXDOMAIN proof coverage (1 iteration, salt A1B2. Next Hashed Owner Name is set to the nonexistent name's hash, which is excluded as the interval endpoint)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=missing.cover.mismatch.nsec3.iter1.saltA1B2.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">missing.cover.mismatch.nsec3.iter1.saltA1B2.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Inconsistent NODATA proof (1 iteration, salt A1B2. For a name with only an AAAA record, an A query is made, and the type bitmap incorrectly includes A)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=target.type.mismatch.nsec3.iter1.saltA1B2.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">target.type.mismatch.nsec3.iter1.saltA1B2.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+            <tr>
+                <td><span class="badge ng">Failure</span></td>
+                <td>Invalid Opt-Out proof coverage for DS absence (1 iteration, salt A1B2. The hash of the unsigned delegation <code>unsigned</code> is set as the next hash, making it an excluded endpoint. The signature itself remains valid)</td>
+                <td><a href="https://www.on-link.jp/dnssec-validator/?domain=unsigned.optout.mismatch.nsec3.iter1.saltA1B2.rsasha256.dnssec-check.jp" target="_blank" rel="noopener">Open validator</a><br><span class="domain">unsigned.optout.mismatch.nsec3.iter1.saltA1B2.rsasha256.dnssec-check.jp</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <footer>
+        <p>&copy; 2026 <a href="https://x.com/goto_ipv6">Y.Goto</a>. This site and the listed domains are provided for DNSSEC validation testing.</p>
+    </footer>
+</body>
+</html>

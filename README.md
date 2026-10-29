@@ -4,6 +4,16 @@ DNSSECの信頼の連鎖（Chain of Trust）の検証結果を確認するため
 
 公開URL: https://www.dnssec-check.jp/
 
+英語版URL: https://www.dnssec-check.jp/en/
+
+## 言語別ページ
+
+言語別ディレクトリ方式を採用し、既存の日本語版はルート、英語版は `en/` 配下に配置しています。日本語版のURLは変更していません。
+各ページ上部の「日本語 / English」から、同じ内容の対応ページに切り替えられます。自動リダイレクトは行いません。
+各HTMLには `lang` 属性と、対応する日本語版・英語版を示す `hreflang` 付きの代替リンクを設定しています。
+
+翻訳は静的HTMLとして管理します。内容を更新するときは両言語の対応ページを更新し、検証用ドメイン名・問い合わせ型・参照先を揃えてください。
+
 ## 概要
 
 このページには、DNSSECの署名アルゴリズムごとに、検証が成功するパターンおよび様々な理由で検証が失敗するパターンのドメイン名がまとめられています。各リンクをクリックすると、[DNSSEC委任状態検証ツール](https://www.on-link.jp/dnssec-validator/)の画面に遷移し、対象ドメインのDNSSEC検証結果を確認できます。
@@ -37,6 +47,8 @@ python3 -m http.server 8000
 ```
 
 ブラウザーで http://127.0.0.1:8000/index.html を開いてページを確認します。VS Code のコマンドパレットから `Tasks: Run Task` を実行し、`Serve static HTML` を選択して起動することもできます。
+
+英語版は http://127.0.0.1:8000/en/ で確認できます。公開時は `en/` ディレクトリも含めて配置してください。サーバー側の言語振り分け設定は不要です。
 
 別の Ubuntu ターミナルでは、次のコマンドで HTTP 応答とページ内容を確認できます。
 
@@ -78,7 +90,12 @@ Aリソースレコードの署名検証では、`corrupted.sign.a.error.<アル
 
 - [index.html](index.html) - 確認用リンク一覧を掲載したページ本体
 - [dnssec-negative-answers.html](dnssec-negative-answers.html) - DNSSECの否定応答、NSEC/NSEC3の順序、Closest EncloserとNext Closer Nameの解説
+- [en/index.html](en/index.html) - 確認用リンク一覧の英語版
+- [en/dnssec-negative-answers.html](en/dnssec-negative-answers.html) - 否定応答の解説の英語版
 - [test_domains.py](test_domains.py) - ドメイン名とリンク表示の整合性を確認するテスト
+- [test_localization.py](test_localization.py) - 言語設定、ページ間リンク、両言語の検証データの整合性を確認するテスト
+
+テストは `python3 -m unittest` で実行できます。
 
 ## 検証用のドメイン名について
 

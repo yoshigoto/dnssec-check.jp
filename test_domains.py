@@ -54,6 +54,8 @@ class TableParser(HTMLParser):
             href = attributes.get("href")
             if href:
                 self.current_cell_links.append(href)
+        elif tag == "br" and self.current_cell is not None:
+            self.current_cell += "\n"
 
     def handle_data(self, data):
         if self.in_heading:
